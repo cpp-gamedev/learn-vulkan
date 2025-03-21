@@ -11,11 +11,21 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_DEBUG_POSTFIX "-d")
 set(BUILD_SHARED_LIBS OFF)
 
+# add learn-vk::ext target
+add_subdirectory(ext)
+
 # declare executable target
 add_executable(${PROJECT_NAME})
 
+# link to ext target
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  learn-vk::ext
+)
+
 # setup precompiled header
 target_precompile_headers(${PROJECT_NAME} PRIVATE
+  <glm/glm.hpp>
+  <vulkan/vulkan.hpp>
 )
 
 # enable including headers in 'src/'

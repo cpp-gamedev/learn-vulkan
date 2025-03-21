@@ -14,9 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: init
-        run: uname -m; sudo apt install -yqq ninja-build
+        run: uname -m; sudo apt update -yqq && sudo apt install -yqq ninja-build mesa-common-dev libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
       - name: configure
-        run: export CXX=g++-14; cmake -S . --preset=default -B build
+        run: export CXX=g++-14; cmake -S . --preset=default -B build -DGLFW_BUILD_X11=OFF
       - name: build debug
         run: cmake --build build --config=Debug
       - name: build release
@@ -30,9 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: init
-        run: uname -m; sudo apt install -yqq ninja-build
+        run: uname -m; sudo apt update -yqq && sudo apt install -yqq ninja-build mesa-common-dev libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
       - name: configure
-        run: cmake -S . --preset=ninja-clang -B build
+        run: cmake -S . --preset=ninja-clang -B build -DGLFW_BUILD_X11=OFF
       - name: build debug
         run: cmake --build build --config=Debug
       - name: build release
@@ -46,9 +46,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: init
-        run: uname -m
+        run: uname -m; sudo apt update -yqq && sudo apt install -yqq ninja-build mesa-common-dev libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
       - name: configure
-        run: export CXX=g++-14; cmake -S . --preset=default -B build
+        run: export CXX=g++-14; cmake -S . --preset=default -B build -DGLFW_BUILD_X11=OFF
       - name: build debug
         run: cmake --build build --config=Debug
       - name: build release
@@ -62,9 +62,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: init
-        run: uname -m
+        run: uname -m; sudo apt update -yqq && sudo apt install -yqq ninja-build mesa-common-dev libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
       - name: configure
-        run: cmake -S . --preset=ninja-clang -B build
+        run: cmake -S . --preset=ninja-clang -B build -DGLFW_BUILD_X11=OFF
       - name: build debug
         run: cmake --build build --config=Debug
       - name: build release
