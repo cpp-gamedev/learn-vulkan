@@ -4,14 +4,11 @@
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 namespace lvk {
-namespace {
-constexpr auto vk_version_v = VK_MAKE_VERSION(1, 3, 0);
-} // namespace
-
 void App::run() {
 	create_window();
 	create_instance();
 	create_surface();
+	select_gpu();
 
 	main_loop();
 }
@@ -41,6 +38,12 @@ void App::create_instance() {
 
 void App::create_surface() {
 	m_surface = glfw::create_surface(m_window.get(), *m_instance);
+}
+
+void App::select_gpu() {
+	m_gpu = get_suitable_gpu(*m_instance, *m_surface);
+	std::println("[lvk] Using GPU: {}",
+				 std::string_view{m_gpu.properties.deviceName});
 }
 
 void App::main_loop() {
