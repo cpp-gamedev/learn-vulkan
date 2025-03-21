@@ -6,7 +6,7 @@ Instead of linking to Vulkan (via the SDK) at build-time, we will load Vulkan at
 1. In `app.cpp` this line is added to the global scope: `VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE`
 1. Before and during initialization `VULKAN_HPP_DEFAULT_DISPATCHER.init()` is called
 
-The first thing to do in Vulkan is to create a `vk::Instance`, which will enable enumeration of physical devices (GPUs) and creation of a logical device.
+The first thing to do in Vulkan is to create an [Instance](https://registry.khronos.org/vulkan/specs/latest/man/html/VkInstance.html), which will enable enumeration of physical devices (GPUs) and creation of a logical device.
 
 Since we require Vulkan 1.3, store that in a constant to be easily referenced:
 
@@ -54,9 +54,13 @@ Create a `vk::InstanceCreateInfo` object and fill it up:
 		extensions);
 ```
 
-Add a `vk::UniqueInstance` member, create it, and initialize the dispatcher against it:
+Add a `vk::UniqueInstance` member _after_ `m_window`: this must be destroyed before terminating GLFW. Create it, and initialize the dispatcher against it:
 
 ```cpp
+	glfw::Window m_window{};
+	vk::UniqueInstance m_instance{};
+
+  // ...
 	m_instance = vk::createInstanceUnique(instance_ci);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_instance);
 ```

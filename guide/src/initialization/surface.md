@@ -1,6 +1,6 @@
 # Vulkan Surface
 
-Being platform agnostic, Vulkan interfaces with the WSI via the [`VK_KHR_surface` extension](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_surface.html).
+Being platform agnostic, Vulkan interfaces with the WSI via the [`VK_KHR_surface` extension](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_surface.html). A [Surface](https://registry.khronos.org/vulkan/specs/latest/man/html/VkSurfaceKHR.html) enables displaying images on the window through the presentation engine.
 
 Add another helper function in `window.hpp/cpp`:
 
@@ -17,7 +17,7 @@ auto glfw::create_surface(GLFWwindow* window, vk::Instance const instance)
 }
 ```
 
-Add corrseponding members to `App` and create the surface:
+Add a `vk::UniqueSurfaceKHR` member to `App` after `m_instance`, and create the surface:
 
 ```cpp
 void App::create_surface() {
