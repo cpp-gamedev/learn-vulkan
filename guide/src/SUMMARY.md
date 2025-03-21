@@ -13,3 +13,4 @@
   - [Vulkan Instance](initialization/instance.md)
   - [Vulkan Surface](initialization/surface.md)
   - [Vulkan Physical Device](initialization/gpu.md)
+  - [Vulkan Device](initialization/device.md)

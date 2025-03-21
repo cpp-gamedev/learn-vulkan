@@ -13,6 +13,7 @@ class App {
 	void create_instance();
 	void create_surface();
 	void select_gpu();
+	void create_device();
 
 	void main_loop();
 
@@ -20,5 +21,7 @@ class App {
 	vk::UniqueInstance m_instance{};
 	vk::UniqueSurfaceKHR m_surface{};
 	Gpu m_gpu{};
+	vk::UniqueDevice m_device{};
+	vk::Queue m_queue{};
 };
 } // namespace lvk

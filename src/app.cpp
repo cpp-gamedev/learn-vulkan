@@ -9,6 +9,7 @@ void App::run() {
 	create_instance();
 	create_surface();
 	select_gpu();
+	create_device();
 
 	main_loop();
 }
@@ -44,6 +45,41 @@ void App::select_gpu() {
 	m_gpu = get_suitable_gpu(*m_instance, *m_surface);
 	std::println("[lvk] Using GPU: {}",
 				 std::string_view{m_gpu.properties.deviceName});
+}
+
+void App::create_device() {
+	auto queue_ci = vk::DeviceQueueCreateInfo{};
+	// since we use only one queue, it has the entire priority range, ie, 1.0
+	static constexpr auto queue_priorities_v = std::array{1.0f};
+	queue_ci.setQueueFamilyIndex(m_gpu.queue_family)
+		.setQueueCount(1)
+		.setQueuePriorities(queue_priorities_v);
+
+	auto enabled_features = vk::PhysicalDeviceFeatures{};
+	enabled_features.fillModeNonSolid = m_gpu.features.fillModeNonSolid;
+	enabled_features.wideLines = m_gpu.features.wideLines;
+	enabled_features.samplerAnisotropy = m_gpu.features.samplerAnisotropy;
+	enabled_features.sampleRateShading = m_gpu.features.sampleRateShading;
+
+	auto sync_feature = vk::PhysicalDeviceSynchronization2Features{vk::True};
+	auto dynamic_rendering_feature =
+		vk::PhysicalDeviceDynamicRenderingFeatures{vk::True};
+	sync_feature.setPNext(&dynamic_rendering_feature);
+
+	auto device_ci = vk::DeviceCreateInfo{};
+	static constexpr auto extensions_v =
+		std::array{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+	device_ci.setPEnabledExtensionNames(extensions_v)
+		.setQueueCreateInfos(queue_ci)
+		.setPEnabledFeatures(&enabled_features)
+		.setPNext(&sync_feature);
+
+	m_device = m_gpu.device.createDeviceUnique(device_ci);
+	VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_device);
+	static constexpr std::uint32_t queue_index_v{0};
+	m_queue = m_device->getQueue(m_gpu.queue_family, queue_index_v);
+
+	// m_device_block.get() = *m_device;
 }
 
 void App::main_loop() {
