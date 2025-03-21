@@ -1,6 +1,7 @@
 #pragma once
 #include <gpu.hpp>
 #include <scoped_waiter.hpp>
+#include <swapchain.hpp>
 #include <vulkan/vulkan.hpp>
 #include <window.hpp>
 
@@ -15,6 +16,7 @@ class App {
 	void create_surface();
 	void select_gpu();
 	void create_device();
+	void create_swapchain();
 
 	void main_loop();
 
@@ -24,6 +26,8 @@ class App {
 	Gpu m_gpu{};
 	vk::UniqueDevice m_device{};
 	vk::Queue m_queue{};
+
+	std::optional<Swapchain> m_swapchain{};
 
 	ScopedWaiter m_waiter{};
 };

@@ -12,6 +12,7 @@ void App::run() {
 	create_surface();
 	select_gpu();
 	create_device();
+	create_swapchain();
 
 	main_loop();
 }
@@ -82,6 +83,11 @@ void App::create_device() {
 	m_queue = m_device->getQueue(m_gpu.queue_family, queue_index_v);
 
 	m_waiter = ScopedWaiter{*m_device};
+}
+
+void App::create_swapchain() {
+	auto const size = glfw::framebuffer_size(m_window.get());
+	m_swapchain.emplace(*m_device, m_gpu, *m_surface, size);
 }
 
 void App::main_loop() {

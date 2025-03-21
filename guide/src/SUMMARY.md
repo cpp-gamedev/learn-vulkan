@@ -15,3 +15,4 @@
   - [Vulkan Physical Device](initialization/gpu.md)
   - [Vulkan Device](initialization/device.md)
   - [Scoped Waiter](initialization/scoped_waiter.md)
+  - [Swapchain](initialization/swapchain.md)
