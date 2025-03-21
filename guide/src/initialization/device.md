@@ -57,3 +57,38 @@ Declare a `vk::Queue` member (order doesn't matter since it's just a handle, the
 	static constexpr std::uint32_t queue_index_v{0};
 	m_queue = m_device->getQueue(m_gpu.queue_family, queue_index_v);
 ```
+
+## ScopedWaiter
+
+A useful abstraction to have is an object that in its destructor waits/blocks until the Device is idle. Being able to do arbitary things on scope exit is useful in general too, but it requires some custom class template like `UniqueResource<Type, Deleter>`. We shall "abuse" `std::unique_ptr<Type, Deleter>` instead: it will not manage the pointer (`Type*`) at all, but instead `Deleter` will call a member function on it (if it isn't null).
+
+Adding this to a new header `scoped_waiter.hpp`:
+
+```cpp
+class ScopedWaiter {
+  public:
+	ScopedWaiter() = default;
+
+	explicit ScopedWaiter(vk::Device const* device) : m_device(device) {}
+
+  private:
+	struct Deleter {
+		void operator()(vk::Device const* device) const noexcept {
+			if (device == nullptr) { return; }
+			device->waitIdle();
+		}
+	};
+	std::unique_ptr<vk::Device const, Deleter> m_device{};
+};
+```
+
+This requires the passed `vk::Device*` to outlive itself, so to be defensive we make `App` be non-moveable and non-copiable, and create a member factory function for waiters:
+
+```cpp
+	auto operator=(App&&) = delete;
+// ...
+
+	[[nodiscard]] auto create_waiter() const -> ScopedWaiter {
+		return ScopedWaiter{&*m_device};
+	}
+```

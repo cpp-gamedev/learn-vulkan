@@ -1,6 +1,8 @@
 #include <app.hpp>
 #include <print>
 
+#include <thread>
+
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 namespace lvk {
@@ -79,7 +81,7 @@ void App::create_device() {
 	static constexpr std::uint32_t queue_index_v{0};
 	m_queue = m_device->getQueue(m_gpu.queue_family, queue_index_v);
 
-	// m_device_block.get() = *m_device;
+	m_waiter = ScopedWaiter{*m_device};
 }
 
 void App::main_loop() {

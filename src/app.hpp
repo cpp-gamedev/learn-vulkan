@@ -1,5 +1,6 @@
 #pragma once
 #include <gpu.hpp>
+#include <scoped_waiter.hpp>
 #include <vulkan/vulkan.hpp>
 #include <window.hpp>
 
@@ -23,5 +24,7 @@ class App {
 	Gpu m_gpu{};
 	vk::UniqueDevice m_device{};
 	vk::Queue m_queue{};
+
+	ScopedWaiter m_waiter{};
 };
 } // namespace lvk
