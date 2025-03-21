@@ -11,4 +11,5 @@
 - [Initialization](initialization/README.md)
   - [GLFW Window](initialization/glfw_window.md)
   - [Vulkan Instance](initialization/instance.md)
+  - [Vulkan Surface](initialization/surface.md)
 

@@ -11,6 +11,7 @@ constexpr auto vk_version_v = VK_MAKE_VERSION(1, 3, 0);
 void App::run() {
 	create_window();
 	create_instance();
+	create_surface();
 
 	main_loop();
 }
@@ -36,6 +37,10 @@ void App::create_instance() {
 
 	m_instance = vk::createInstanceUnique(instance_ci);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_instance);
+}
+
+void App::create_surface() {
+	m_surface = glfw::create_surface(m_window.get(), *m_instance);
 }
 
 void App::main_loop() {

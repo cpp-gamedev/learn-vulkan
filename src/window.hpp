@@ -1,6 +1,7 @@
 #pragma once
 #include <GLFW/glfw3.h>
 #include <glm/vec2.hpp>
+#include <vulkan/vulkan.hpp>
 #include <memory>
 #include <span>
 
@@ -15,4 +16,7 @@ using Window = std::unique_ptr<GLFWwindow, Deleter>;
 [[nodiscard]] auto create_window(glm::ivec2 size, char const* title) -> Window;
 
 [[nodiscard]] auto instance_extensions() -> std::span<char const* const>;
+
+[[nodiscard]] auto create_surface(GLFWwindow* window, vk::Instance instance)
+	-> vk::UniqueSurfaceKHR;
 } // namespace lvk::glfw
