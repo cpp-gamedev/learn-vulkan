@@ -130,6 +130,8 @@ auto Swapchain::acquire_next_image(vk::Semaphore const to_signal)
 	-> std::optional<RenderTarget> {
 	assert(!m_image_index);
 	static constexpr auto timeout_v = std::numeric_limits<std::uint64_t>::max();
+	// avoid VulkanHPP ErrorOutOfDateKHR exceptions by using alternate API that
+	// returns a Result.
 	auto image_index = std::uint32_t{};
 	auto const result = m_device.acquireNextImageKHR(
 		*m_swapchain, timeout_v, to_signal, {}, &image_index);
@@ -160,6 +162,7 @@ auto Swapchain::present(vk::Queue const queue, vk::Semaphore const to_wait)
 	present_info.setSwapchains(*m_swapchain)
 		.setImageIndices(image_index)
 		.setWaitSemaphores(to_wait);
+	// avoid VulkanHPP ErrorOutOfDateKHR exceptions by using alternate API.
 	auto const result = queue.presentKHR(&present_info);
 	m_image_index.reset();
 	return !needs_recreation(result);

@@ -73,6 +73,7 @@ attachment_info.setImageView(render_target->image_view)
   .setImageLayout(vk::ImageLayout::eAttachmentOptimal)
   .setLoadOp(vk::AttachmentLoadOp::eClear)
   .setStoreOp(vk::AttachmentStoreOp::eStore)
+  // temporarily red.
   .setClearValue(vk::ClearColorValue{1.0f, 0.0f, 0.0f, 1.0f});
 ```
 

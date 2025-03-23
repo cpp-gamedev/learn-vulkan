@@ -193,6 +193,7 @@ void App::main_loop() {
 			.setImageLayout(vk::ImageLayout::eAttachmentOptimal)
 			.setLoadOp(vk::AttachmentLoadOp::eClear)
 			.setStoreOp(vk::AttachmentStoreOp::eStore)
+			// temporarily red.
 			.setClearValue(vk::ClearColorValue{1.0f, 0.0f, 0.0f, 1.0f});
 		auto rendering_info = vk::RenderingInfo{};
 		auto const render_area =
