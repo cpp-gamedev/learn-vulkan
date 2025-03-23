@@ -1,7 +1,7 @@
 #include <app.hpp>
+#include <cassert>
 #include <print>
-
-#include <thread>
+#include <ranges>
 
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
@@ -13,6 +13,7 @@ void App::run() {
 	select_gpu();
 	create_device();
 	create_swapchain();
+	create_render_sync();
 
 	main_loop();
 }
@@ -90,12 +91,42 @@ void App::create_swapchain() {
 	m_swapchain.emplace(*m_device, m_gpu, *m_surface, size);
 }
 
+void App::create_render_sync() {
+	// Command Buffers are 'allocated' from a Command Pool (which is 'created'
+	// like all other Vulkan objects so far). We can allocate all the buffers
+	// from a single pool here.
+	auto command_pool_ci = vk::CommandPoolCreateInfo{};
+	// this flag enables resetting the command buffer for re-recording (unlike a
+	// single-time submit scenario).
+	command_pool_ci.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
+		.setQueueFamilyIndex(m_gpu.queue_family);
+	m_render_cmd_pool = m_device->createCommandPoolUnique(command_pool_ci);
+
+	auto command_buffer_ai = vk::CommandBufferAllocateInfo{};
+	command_buffer_ai.setCommandPool(*m_render_cmd_pool)
+		.setCommandBufferCount(static_cast<std::uint32_t>(resource_buffering_v))
+		.setLevel(vk::CommandBufferLevel::ePrimary);
+	auto const command_buffers =
+		m_device->allocateCommandBuffers(command_buffer_ai);
+	assert(command_buffers.size() == m_render_sync.size());
+
+	// we create Render Fences as pre-signaled so that on the first render for
+	// each virtual frame we don't wait on their fences (since there's nothing
+	// to wait for yet).
+	static constexpr auto fence_create_info_v =
+		vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled};
+	for (auto [sync, command_buffer] :
+		 std::views::zip(m_render_sync, command_buffers)) {
+		sync.command_buffer = command_buffer;
+		sync.draw = m_device->createSemaphoreUnique({});
+		sync.present = m_device->createSemaphoreUnique({});
+		sync.drawn = m_device->createFenceUnique(fence_create_info_v);
+	}
+}
+
 void App::main_loop() {
-	auto count = 0;
 	while (glfwWindowShouldClose(m_window.get()) == GLFW_FALSE) {
 		glfwPollEvents();
-		if (++count > 500) { break; }
-		std::this_thread::sleep_for(std::chrono::milliseconds{10});
 	}
 }
 } // namespace lvk
