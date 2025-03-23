@@ -91,8 +91,11 @@ void App::create_swapchain() {
 }
 
 void App::main_loop() {
+	auto count = 0;
 	while (glfwWindowShouldClose(m_window.get()) == GLFW_FALSE) {
 		glfwPollEvents();
+		if (++count > 500) { break; }
+		std::this_thread::sleep_for(std::chrono::milliseconds{10});
 	}
 }
 } // namespace lvk

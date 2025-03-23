@@ -90,6 +90,7 @@ auto Swapchain::recreate(glm::ivec2 size) -> bool {
 
 	m_device.waitIdle();
 	m_swapchain = m_device.createSwapchainKHRUnique(m_ci);
+	m_image_index.reset();
 
 	populate_images();
 	create_image_views();

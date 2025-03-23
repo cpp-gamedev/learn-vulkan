@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/vec2.hpp>
 #include <gpu.hpp>
+#include <optional>
 #include <vector>
 
 namespace lvk {
@@ -26,5 +27,6 @@ class Swapchain {
 	vk::UniqueSwapchainKHR m_swapchain{};
 	std::vector<vk::Image> m_images{};
 	std::vector<vk::UniqueImageView> m_image_views{};
+	std::optional<std::size_t> m_image_index{};
 };
 } // namespace lvk

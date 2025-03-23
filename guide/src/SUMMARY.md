@@ -16,3 +16,6 @@
   - [Vulkan Device](initialization/device.md)
   - [Scoped Waiter](initialization/scoped_waiter.md)
   - [Swapchain](initialization/swapchain.md)
+- [Rendering](rendering/README.md)
+  - [Swapchain Loop](rendering/swapchain_loop.md)
+  - [Render Sync](rendering/render_sync.md)
