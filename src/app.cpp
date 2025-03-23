@@ -17,6 +17,7 @@ void App::run() {
 	create_device();
 	create_swapchain();
 	create_render_sync();
+	create_imgui();
 
 	main_loop();
 }
@@ -137,6 +138,21 @@ void App::create_render_sync() {
 	}
 }
 
+void App::create_imgui() {
+	auto const imgui_ci = DearImGui::CreateInfo{
+		.window = m_window.get(),
+		.api_version = vk_version_v,
+		.instance = *m_instance,
+		.physical_device = m_gpu.device,
+		.queue_family = m_gpu.queue_family,
+		.device = *m_device,
+		.queue = m_queue,
+		.color_format = m_swapchain->get_format(),
+		.samples = vk::SampleCountFlagBits::e1,
+	};
+	m_imgui.emplace(imgui_ci);
+}
+
 void App::main_loop() {
 	while (glfwWindowShouldClose(m_window.get()) == GLFW_FALSE) {
 		glfwPollEvents();
@@ -165,6 +181,9 @@ void App::main_loop() {
 		// reset fence _after_ acquisition of image: if it fails, the
 		// fence remains signaled.
 		m_device->resetFences(*render_sync.drawn);
+		m_imgui->new_frame();
+
+		ImGui::ShowDemoWindow();
 
 		auto command_buffer_bi = vk::CommandBufferBeginInfo{};
 		// this flag means recorded commands will not be reused.
@@ -204,6 +223,13 @@ void App::main_loop() {
 
 		render_sync.command_buffer.beginRendering(rendering_info);
 		// draw stuff here.
+		render_sync.command_buffer.endRendering();
+
+		m_imgui->end_frame();
+		rendering_info.setColorAttachments(attachment_info)
+			.setPDepthAttachment(nullptr);
+		render_sync.command_buffer.beginRendering(rendering_info);
+		m_imgui->render(render_sync.command_buffer);
 		render_sync.command_buffer.endRendering();
 
 		// AttachmentOptimal => PresentSrc

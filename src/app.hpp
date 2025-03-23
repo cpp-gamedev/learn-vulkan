@@ -1,4 +1,5 @@
 #pragma once
+#include <dear_imgui.hpp>
 #include <gpu.hpp>
 #include <resource_buffering.hpp>
 #include <scoped_waiter.hpp>
@@ -30,6 +31,7 @@ class App {
 	void create_device();
 	void create_swapchain();
 	void create_render_sync();
+	void create_imgui();
 
 	void main_loop();
 
@@ -48,6 +50,8 @@ class App {
 	Buffered<RenderSync> m_render_sync{};
 	// Current virtual frame index.
 	std::size_t m_frame_index{};
+
+	std::optional<DearImGui> m_imgui{};
 
 	// waiter must be the last member to ensure it blocks until device is idle
 	// before other members get destroyed.

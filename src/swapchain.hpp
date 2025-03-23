@@ -17,6 +17,10 @@ class Swapchain {
 		return {m_ci.imageExtent.width, m_ci.imageExtent.height};
 	}
 
+	[[nodiscard]] auto get_format() const -> vk::Format {
+		return m_ci.imageFormat;
+	}
+
 	[[nodiscard]] auto acquire_next_image(vk::Semaphore to_signal)
 		-> std::optional<RenderTarget>;
 

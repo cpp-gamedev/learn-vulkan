@@ -21,3 +21,6 @@
   - [Render Sync](rendering/render_sync.md)
   - [Swapchain Update](rendering/swapchain_update.md)
   - [Dynamic Rendering](rendering/dynamic_rendering.md)
+- [Dear ImGui](dear_imgui/README.md)
+  - [class DearImGui](dear_imgui/dear_imgui.md)
+  - [ImGui Integration](dear_imgui/imgui_integration.md)

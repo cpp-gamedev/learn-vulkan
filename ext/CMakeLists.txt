@@ -27,21 +27,47 @@ target_compile_definitions(glm PUBLIC
 message(STATUS "[Vulkan-Headers]")
 add_subdirectory(src/Vulkan-Headers)
 
+# setup Dear ImGui library
+message(STATUS "[Dear ImGui]")
+add_library(imgui)
+add_library(imgui::imgui ALIAS imgui)
+target_include_directories(imgui SYSTEM PUBLIC src/imgui)
+target_link_libraries(imgui PUBLIC
+  glfw::glfw
+  Vulkan::Headers
+)
+target_compile_definitions(imgui PUBLIC
+  VK_NO_PROTOTYPES # Dynamically load Vulkan at runtime
+)
+target_sources(imgui PRIVATE
+  src/imgui/imconfig.h
+  src/imgui/imgui_demo.cpp
+  src/imgui/imgui_draw.cpp
+  src/imgui/imgui_internal.h
+  src/imgui/imgui_tables.cpp
+  src/imgui/imgui_widgets.cpp
+  src/imgui/imgui.cpp
+  src/imgui/imgui.h
+
+  src/imgui/backends/imgui_impl_glfw.cpp
+  src/imgui/backends/imgui_impl_glfw.h
+  src/imgui/backends/imgui_impl_vulkan.cpp
+  src/imgui/backends/imgui_impl_vulkan.h
+)
+
 # declare ext library target
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(learn-vk::ext ALIAS ${PROJECT_NAME})
 
 # link to all dependencies
 target_link_libraries(${PROJECT_NAME} INTERFACE
-  glfw::glfw
   glm::glm
-  Vulkan::Headers
+  imgui::imgui
 )
 
 # setup preprocessor defines
 target_compile_definitions(${PROJECT_NAME} INTERFACE
   GLFW_INCLUDE_VULKAN # enable GLFW's Vulkan API
-  VK_NO_PROTOTYPES # Dynamically load Vulkan at runtime
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL Linux)
