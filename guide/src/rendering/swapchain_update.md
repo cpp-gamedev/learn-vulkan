@@ -1,10 +1,10 @@
-# Swapchain Acquire/Present
+# Swapchain Update
 
 Swapchain acquire/present operations can have various results. We constrain ourselves to the following:
 
 - `eSuccess`: all good
-- `eSuboptimalKHR`: also all good (this is also unlikely to occur on a desktop)
-- `eErrorOutOfDateKHR`: Swapchain needs to be recreated, consider the operation to have not succeeded
+- `eSuboptimalKHR`: also all good (not an error, and this is unlikely to occur on a desktop)
+- `eErrorOutOfDateKHR`: Swapchain needs to be recreated
 - Any other `vk::Result`: fatal/unexpected error
 
 Expressing as a helper function in `swapchain.cpp`:
@@ -59,8 +59,7 @@ Similarly, present:
 ```cpp
 auto Swapchain::present(vk::Queue const queue, vk::Semaphore const to_wait)
 	-> bool {
-	assert(m_image_index);
-	auto const image_index = static_cast<std::uint32_t>(*m_image_index);
+	auto const image_index = static_cast<std::uint32_t>(m_image_index.value());
 	auto present_info = vk::PresentInfoKHR{};
 	present_info.setSwapchains(*m_swapchain)
 		.setImageIndices(image_index)
@@ -84,10 +83,9 @@ constexpr auto subresource_range_v = [] {
 
 // ...
 auto Swapchain::base_barrier() const -> vk::ImageMemoryBarrier2 {
-	assert(m_image_index);
 	// fill up the parts common to all barriers.
 	auto ret = vk::ImageMemoryBarrier2{};
-	ret.setImage(m_images.at(*m_image_index))
+	ret.setImage(m_images.at(m_image_index.value()))
 		.setSubresourceRange(subresource_range_v)
 		.setSrcQueueFamilyIndex(m_gpu.queue_family)
 		.setDstQueueFamilyIndex(m_gpu.queue_family);

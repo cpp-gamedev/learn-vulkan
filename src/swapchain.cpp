@@ -137,10 +137,9 @@ auto Swapchain::acquire_next_image(vk::Semaphore const to_signal)
 }
 
 auto Swapchain::base_barrier() const -> vk::ImageMemoryBarrier2 {
-	assert(m_image_index);
 	// fill up the parts common to all barriers.
 	auto ret = vk::ImageMemoryBarrier2{};
-	ret.setImage(m_images.at(*m_image_index))
+	ret.setImage(m_images.at(m_image_index.value()))
 		.setSubresourceRange(subresource_range_v)
 		.setSrcQueueFamilyIndex(m_gpu.queue_family)
 		.setDstQueueFamilyIndex(m_gpu.queue_family);
@@ -149,8 +148,7 @@ auto Swapchain::base_barrier() const -> vk::ImageMemoryBarrier2 {
 
 auto Swapchain::present(vk::Queue const queue, vk::Semaphore const to_wait)
 	-> bool {
-	assert(m_image_index);
-	auto const image_index = static_cast<std::uint32_t>(*m_image_index);
+	auto const image_index = static_cast<std::uint32_t>(m_image_index.value());
 	auto present_info = vk::PresentInfoKHR{};
 	present_info.setSwapchains(*m_swapchain)
 		.setImageIndices(image_index)
