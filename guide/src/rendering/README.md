@@ -1,3 +1,3 @@
 # Rendering
 
-This section implements the Swapchain loop, integrates Dear ImGui, and introduces Dynamic Rendering.
+This section implements Render Sync, the Swapchain loop, performs Swapchain image layout transitions, and introduces Dynamic Rendering.
