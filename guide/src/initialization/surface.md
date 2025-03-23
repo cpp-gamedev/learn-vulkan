@@ -6,14 +6,14 @@ Add another helper function in `window.hpp/cpp`:
 
 ```cpp
 auto glfw::create_surface(GLFWwindow* window, vk::Instance const instance)
-	-> vk::UniqueSurfaceKHR {
-	VkSurfaceKHR ret{};
-	auto const result =
-		glfwCreateWindowSurface(instance, window, nullptr, &ret);
-	if (result != VK_SUCCESS || ret == VkSurfaceKHR{}) {
-		throw std::runtime_error{"Failed to create Vulkan Surface"};
-	}
-	return vk::UniqueSurfaceKHR{ret, instance};
+  -> vk::UniqueSurfaceKHR {
+  VkSurfaceKHR ret{};
+  auto const result =
+    glfwCreateWindowSurface(instance, window, nullptr, &ret);
+  if (result != VK_SUCCESS || ret == VkSurfaceKHR{}) {
+    throw std::runtime_error{"Failed to create Vulkan Surface"};
+  }
+  return vk::UniqueSurfaceKHR{ret, instance};
 }
 ```
 
@@ -21,6 +21,6 @@ Add a `vk::UniqueSurfaceKHR` member to `App` after `m_instance`, and create the 
 
 ```cpp
 void App::create_surface() {
-	m_surface = glfw::create_surface(m_window.get(), *m_instance);
+  m_surface = glfw::create_surface(m_window.get(), *m_instance);
 }
 ```

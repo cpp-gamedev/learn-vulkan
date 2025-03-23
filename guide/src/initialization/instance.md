@@ -20,11 +20,12 @@ In `App`, create  a new member function `create_instance()` and call it after `c
 
 ```cpp
 void App::create_instance() {
-	VULKAN_HPP_DEFAULT_DISPATCHER.init();
-	auto const loader_version = vk::enumerateInstanceVersion();
-	if (loader_version < vk_version_v) {
-		throw std::runtime_error{"Loader does not support Vulkan 1.3"};
-	}
+  // initialize the dispatcher without any arguments.
+  VULKAN_HPP_DEFAULT_DISPATCHER.init();
+  auto const loader_version = vk::enumerateInstanceVersion();
+  if (loader_version < vk_version_v) {
+    throw std::runtime_error{"Loader does not support Vulkan 1.3"};
+  }
 }
 ```
 
@@ -32,37 +33,39 @@ We will need the WSI instance extensions, which GLFW conveniently provides for u
 
 ```cpp
 auto glfw::instance_extensions() -> std::span<char const* const> {
-	auto count = std::uint32_t{};
-	auto const* extensions = glfwGetRequiredInstanceExtensions(&count);
-	return {extensions, static_cast<std::size_t>(count)};
+  auto count = std::uint32_t{};
+  auto const* extensions = glfwGetRequiredInstanceExtensions(&count);
+  return {extensions, static_cast<std::size_t>(count)};
 }
 ```
 
 Continuing with instance creation, create a `vk::ApplicationInfo` object and fill it up:
 
 ```cpp
-	auto app_info = vk::ApplicationInfo{};
-	app_info.setPApplicationName("Learn Vulkan").setApiVersion(vk_version_v);
+auto app_info = vk::ApplicationInfo{};
+app_info.setPApplicationName("Learn Vulkan").setApiVersion(vk_version_v);
 ```
 
 Create a `vk::InstanceCreateInfo` object and fill it up:
 
 ```cpp
-	auto instance_ci = vk::InstanceCreateInfo{};
-	auto const extensions = glfw::instance_extensions();
-	instance_ci.setPApplicationInfo(&app_info).setPEnabledExtensionNames(
-		extensions);
+auto instance_ci = vk::InstanceCreateInfo{};
+// need WSI instance extensions here (platform-specific Swapchains).
+auto const extensions = glfw::instance_extensions();
+instance_ci.setPApplicationInfo(&app_info).setPEnabledExtensionNames(
+  extensions);
 ```
 
 Add a `vk::UniqueInstance` member _after_ `m_window`: this must be destroyed before terminating GLFW. Create it, and initialize the dispatcher against it:
 
 ```cpp
-	glfw::Window m_window{};
-	vk::UniqueInstance m_instance{};
+glfw::Window m_window{};
+vk::UniqueInstance m_instance{};
 
-  // ...
-	m_instance = vk::createInstanceUnique(instance_ci);
-	VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_instance);
+// ...
+// initialize the dispatcher against the created Instance.
+m_instance = vk::createInstanceUnique(instance_ci);
+VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_instance);
 ```
 
 Make sure VkConfig is running with validation layers enabled, and debug/run the app. If "Information" level loader messages are enabled, you should see quite a bit of console output at this point: information about layers being loaded, physical devices and their ICDs being enumerated, etc.

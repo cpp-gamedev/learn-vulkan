@@ -6,15 +6,15 @@
 // app.hpp
 namespace lvk {
 class App {
-  public:
-	void run();
+ public:
+  void run();
 };
 } // namespace lvk
 
 // app.cpp
 namespace lvk {
 void App::run() {
-	// TODO
+  // TODO
 }
 } // namespace lvk
 ```
@@ -26,14 +26,14 @@ void App::run() {
 ```cpp
 // main.cpp
 auto main() -> int {
-	try {
-		lvk::App{}.run();
-	} catch (std::exception const& e) {
-		std::println(stderr, "PANIC: {}", e.what());
-		return EXIT_FAILURE;
-	} catch (...) {
-		std::println("PANIC!");
-		return EXIT_FAILURE;
-	}
+  try {
+    lvk::App{}.run();
+  } catch (std::exception const& e) {
+    std::println(stderr, "PANIC: {}", e.what());
+    return EXIT_FAILURE;
+  } catch (...) {
+    std::println("PANIC!");
+    return EXIT_FAILURE;
+  }
 }
 ```
