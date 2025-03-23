@@ -20,15 +20,18 @@ class App {
 
 	void main_loop();
 
+	// the order of these RAII members is crucially important.
 	glfw::Window m_window{};
 	vk::UniqueInstance m_instance{};
 	vk::UniqueSurfaceKHR m_surface{};
-	Gpu m_gpu{};
+	Gpu m_gpu{}; // not an RAII member.
 	vk::UniqueDevice m_device{};
-	vk::Queue m_queue{};
+	vk::Queue m_queue{}; // not an RAII member.
 
 	std::optional<Swapchain> m_swapchain{};
 
+	// waiter must be the last member to ensure it blocks until device is idle
+	// before other members get destroyed.
 	ScopedWaiter m_waiter{};
 };
 } // namespace lvk

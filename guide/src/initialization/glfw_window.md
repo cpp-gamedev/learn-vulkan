@@ -8,7 +8,7 @@ Although it is quite feasible to have multiple windows in a Vulkan-GLFW applicat
 // window.hpp
 namespace lvk::glfw {
 struct Deleter {
-	void operator()(GLFWwindow* window) const noexcept;
+  void operator()(GLFWwindow* window) const noexcept;
 };
 
 using Window = std::unique_ptr<GLFWwindow, Deleter>;
@@ -19,8 +19,8 @@ using Window = std::unique_ptr<GLFWwindow, Deleter>;
 
 // window.cpp
 void Deleter::operator()(GLFWwindow* window) const noexcept {
-	glfwDestroyWindow(window);
-	glfwTerminate();
+  glfwDestroyWindow(window);
+  glfwTerminate();
 }
 ```
 
@@ -28,23 +28,23 @@ GLFW can create fullscreen and borderless windows, but we will stick to a standa
 
 ```cpp
 auto glfw::create_window(glm::ivec2 const size, char const* title) -> Window {
-	static auto const on_error = [](int const code, char const* description) {
-		std::println(stderr, "[GLFW] Error {}: {}", code, description);
-	};
-	glfwSetErrorCallback(on_error);
-	if (glfwInit() != GLFW_TRUE) {
-		throw std::runtime_error{"Failed to initialize GLFW"};
-	}
-	// check for Vulkan support.
-	if (glfwVulkanSupported() != GLFW_TRUE) {
-		throw std::runtime_error{"Vulkan not supported"};
-	}
-	auto ret = Window{};
-	// tell GLFW that we don't want an OpenGL context.
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	ret.reset(glfwCreateWindow(size.x, size.y, title, nullptr, nullptr));
-	if (!ret) { throw std::runtime_error{"Failed to create GLFW Window"}; }
-	return ret;
+  static auto const on_error = [](int const code, char const* description) {
+    std::println(stderr, "[GLFW] Error {}: {}", code, description);
+  };
+  glfwSetErrorCallback(on_error);
+  if (glfwInit() != GLFW_TRUE) {
+    throw std::runtime_error{"Failed to initialize GLFW"};
+  }
+  // check for Vulkan support.
+  if (glfwVulkanSupported() != GLFW_TRUE) {
+    throw std::runtime_error{"Vulkan not supported"};
+  }
+  auto ret = Window{};
+  // tell GLFW that we don't want an OpenGL context.
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  ret.reset(glfwCreateWindow(size.x, size.y, title, nullptr, nullptr));
+  if (!ret) { throw std::runtime_error{"Failed to create GLFW Window"}; }
+  return ret;
 }
 ```
 
@@ -53,35 +53,35 @@ auto glfw::create_window(glm::ivec2 const size, char const* title) -> Window {
 Declare it as a private member:
 
 ```cpp
- private:
-	glfw::Window m_window{};
+private:
+  glfw::Window m_window{};
 ```
 
 Add some private member functions to encapsulate each operation:
 
 ```cpp
-	void create_window();
+void create_window();
 
-	void main_loop();
+void main_loop();
 ```
 
 Implement them and call them in `run()`:
 
 ```cpp
 void App::run() {
-	create_window();
+create_window();
 
-	main_loop();
+main_loop();
 }
 
 void App::create_window() {
-	m_window = glfw::create_window({1280, 720}, "Learn Vulkan");
+  m_window = glfw::create_window({1280, 720}, "Learn Vulkan");
 }
 
 void App::main_loop() {
-	while (glfwWindowShouldClose(m_window.get()) == GLFW_FALSE) {
-		glfwPollEvents();
-	}
+  while (glfwWindowShouldClose(m_window.get()) == GLFW_FALSE) {
+    glfwPollEvents();
+  }
 }
 ```
 

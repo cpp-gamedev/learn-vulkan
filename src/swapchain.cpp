@@ -14,6 +14,7 @@ constexpr auto srgb_formats_v = std::array{
 	vk::Format::eB8G8R8A8Srgb,
 };
 
+// returns a SurfaceFormat with SrgbNonLinear color space and an sRGB format.
 [[nodiscard]] constexpr auto
 get_surface_format(std::span<vk::SurfaceFormatKHR const> supported)
 	-> vk::SurfaceFormatKHR {
@@ -30,6 +31,7 @@ get_surface_format(std::span<vk::SurfaceFormatKHR const> supported)
 	return supported.front();
 }
 
+// returns currentExtent if specified, else clamped size.
 [[nodiscard]] constexpr auto
 get_image_extent(vk::SurfaceCapabilitiesKHR const& capabilities,
 				 glm::uvec2 const size) -> vk::Extent2D {
@@ -55,6 +57,7 @@ get_image_count(vk::SurfaceCapabilitiesKHR const& capabilities)
 					  capabilities.maxImageCount);
 }
 
+// throws if result is not eSuccess.
 void require_success(vk::Result const result, char const* error_msg) {
 	if (result != vk::Result::eSuccess) { throw std::runtime_error{error_msg}; }
 }
@@ -69,7 +72,9 @@ Swapchain::Swapchain(vk::Device const device, Gpu const& gpu,
 		.setImageFormat(surface_format.format)
 		.setImageColorSpace(surface_format.colorSpace)
 		.setImageArrayLayers(1)
+		// Swapchain images will be used as color attachments (render targets).
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
+		// eFifo is guaranteed to be supported.
 		.setPresentMode(vk::PresentModeKHR::eFifo);
 	if (!recreate(size)) {
 		throw std::runtime_error{"Failed to create Vulkan Swapchain"};
@@ -77,6 +82,7 @@ Swapchain::Swapchain(vk::Device const device, Gpu const& gpu,
 }
 
 auto Swapchain::recreate(glm::ivec2 size) -> bool {
+	// Image sizes must be positive.
 	if (size.x <= 0 || size.y <= 0) { return false; }
 
 	auto const capabilities =
@@ -88,6 +94,7 @@ auto Swapchain::recreate(glm::ivec2 size) -> bool {
 	assert(m_ci.imageExtent.width > 0 && m_ci.imageExtent.height > 0 &&
 		   m_ci.minImageCount >= min_images_v);
 
+	// wait for the device to be idle before destroying the current swapchain.
 	m_device.waitIdle();
 	m_swapchain = m_device.createSwapchainKHRUnique(m_ci);
 
@@ -100,6 +107,8 @@ auto Swapchain::recreate(glm::ivec2 size) -> bool {
 }
 
 void Swapchain::populate_images() {
+	// we use the more verbose two-call API to avoid assigning m_images to a new
+	// vector on every call.
 	auto image_count = std::uint32_t{};
 	auto result =
 		m_device.getSwapchainImagesKHR(*m_swapchain, &image_count, nullptr);
@@ -113,10 +122,12 @@ void Swapchain::populate_images() {
 
 void Swapchain::create_image_views() {
 	auto subresource_range = vk::ImageSubresourceRange{};
+	// this is a color image with 1 layer and 1 mip-level (the default).
 	subresource_range.setAspectMask(vk::ImageAspectFlagBits::eColor)
 		.setLayerCount(1)
 		.setLevelCount(1);
 	auto image_view_ci = vk::ImageViewCreateInfo{};
+	// set common parameters here (everything except the Image).
 	image_view_ci.setViewType(vk::ImageViewType::e2D)
 		.setFormat(m_ci.imageFormat)
 		.setSubresourceRange(subresource_range);
