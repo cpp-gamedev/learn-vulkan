@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/vec2.hpp>
 #include <gpu.hpp>
+#include <render_target.hpp>
 #include <optional>
 #include <vector>
 
@@ -15,6 +16,13 @@ class Swapchain {
 	[[nodiscard]] auto get_size() const -> glm::ivec2 {
 		return {m_ci.imageExtent.width, m_ci.imageExtent.height};
 	}
+
+	[[nodiscard]] auto acquire_next_image(vk::Semaphore to_signal)
+		-> std::optional<RenderTarget>;
+
+	[[nodiscard]] auto base_barrier() const -> vk::ImageMemoryBarrier2;
+
+	[[nodiscard]] auto present(vk::Queue queue, vk::Semaphore to_wait) -> bool;
 
   private:
 	void populate_images();

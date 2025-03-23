@@ -19,3 +19,4 @@
 - [Rendering](rendering/README.md)
   - [Swapchain Loop](rendering/swapchain_loop.md)
   - [Render Sync](rendering/render_sync.md)
+  - [Swapchain Update](rendering/swapchain_update.md)
