@@ -1,8 +1,6 @@
 #include <app.hpp>
 #include <print>
 
-#include <thread>
-
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 namespace lvk {
@@ -22,6 +20,7 @@ void App::create_window() {
 }
 
 void App::create_instance() {
+	// initialize the dispatcher without any arguments.
 	VULKAN_HPP_DEFAULT_DISPATCHER.init();
 	auto const loader_version = vk::enumerateInstanceVersion();
 	if (loader_version < vk_version_v) {
@@ -32,11 +31,13 @@ void App::create_instance() {
 	app_info.setPApplicationName("Learn Vulkan").setApiVersion(vk_version_v);
 
 	auto instance_ci = vk::InstanceCreateInfo{};
+	// need WSI instance extensions here (platform-specific Swapchains).
 	auto const extensions = glfw::instance_extensions();
 	instance_ci.setPApplicationInfo(&app_info).setPEnabledExtensionNames(
 		extensions);
 
 	m_instance = vk::createInstanceUnique(instance_ci);
+	// initialize the dispatcher against the created Instance.
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_instance);
 }
 
@@ -58,18 +59,24 @@ void App::create_device() {
 		.setQueueCount(1)
 		.setQueuePriorities(queue_priorities_v);
 
+	// nice-to-have optional core features, enable if GPU supports them.
 	auto enabled_features = vk::PhysicalDeviceFeatures{};
 	enabled_features.fillModeNonSolid = m_gpu.features.fillModeNonSolid;
 	enabled_features.wideLines = m_gpu.features.wideLines;
 	enabled_features.samplerAnisotropy = m_gpu.features.samplerAnisotropy;
 	enabled_features.sampleRateShading = m_gpu.features.sampleRateShading;
 
+	// extra features that need to be explicitly enabled.
 	auto sync_feature = vk::PhysicalDeviceSynchronization2Features{vk::True};
 	auto dynamic_rendering_feature =
 		vk::PhysicalDeviceDynamicRenderingFeatures{vk::True};
+	// sync_feature.pNext => dynamic_rendering_feature,
+	// and later device_ci.pNext => sync_feature.
+	// this is 'pNext chaining'.
 	sync_feature.setPNext(&dynamic_rendering_feature);
 
 	auto device_ci = vk::DeviceCreateInfo{};
+	// we only need one device extension: Swapchain.
 	static constexpr auto extensions_v =
 		std::array{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 	device_ci.setPEnabledExtensionNames(extensions_v)
@@ -78,11 +85,12 @@ void App::create_device() {
 		.setPNext(&sync_feature);
 
 	m_device = m_gpu.device.createDeviceUnique(device_ci);
+	// initialize the dispatcher against the created Device.
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_device);
 	static constexpr std::uint32_t queue_index_v{0};
 	m_queue = m_device->getQueue(m_gpu.queue_family, queue_index_v);
 
-	m_waiter = ScopedWaiter{*m_device};
+	m_waiter = *m_device;
 }
 
 void App::create_swapchain() {

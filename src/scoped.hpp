@@ -23,7 +23,7 @@ class Scoped {
 		return *this;
 	}
 
-	explicit constexpr Scoped(Type t) : m_t(std::move(t)) {}
+	explicit(false) constexpr Scoped(Type t) : m_t(std::move(t)) {}
 
 	constexpr ~Scoped() {
 		if (m_t == Type{}) { return; }
