@@ -34,23 +34,23 @@ m_device->resetFences(*render_sync.drawn);
 m_imgui->new_frame();
 
 // ...
-render_sync.command_buffer.beginRendering(rendering_info);
+command_buffer.beginRendering(rendering_info);
 ImGui::ShowDemoWindow();
 // draw stuff here.
-render_sync.command_buffer.endRendering();
+command_buffer.endRendering();
 ```
 
-ImGui doesn't draw anything here (the actual draw command requires the Command Buffer), it's just a good customization point to use indirection at later.
+ImGui doesn't draw anything here (the actual draw command requires the Command Buffer), it's just a good customization point for all higher level logic.
 
 We use a separate render pass for Dear ImGui, again for isolation, and to enable us to change the main render pass later, eg by adding a depth buffer attachment (`DearImGui` is setup assuming its render pass will only use a single color attachment).
 
 ```cpp
 m_imgui->end_frame();
-rendering_info.setColorAttachments(attachment_info)
+rendering_info.setColorAttachments(color_attachment)
   .setPDepthAttachment(nullptr);
-render_sync.command_buffer.beginRendering(rendering_info);
-m_imgui->render(render_sync.command_buffer);
-render_sync.command_buffer.endRendering();
+command_buffer.beginRendering(rendering_info);
+m_imgui->render(command_buffer);
+command_buffer.endRendering();
 ```
 
 ![ImGui Demo](./imgui_demo.png)

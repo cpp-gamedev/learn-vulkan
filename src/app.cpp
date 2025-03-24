@@ -197,6 +197,7 @@ auto App::wait_for_frame() -> vk::CommandBuffer {
 	// reset fence _after_ acquisition of image: if it fails, the
 	// fence remains signaled.
 	m_device->resetFences(*render_sync.drawn);
+	m_imgui->new_frame();
 
 	auto command_buffer_bi = vk::CommandBufferBeginInfo{};
 	// this flag means recorded commands will not be reused.
@@ -238,7 +239,15 @@ void App::render(vk::CommandBuffer const command_buffer) {
 		.setLayerCount(1);
 
 	command_buffer.beginRendering(rendering_info);
+	ImGui::ShowDemoWindow();
 	// draw stuff here.
+	command_buffer.endRendering();
+
+	m_imgui->end_frame();
+	rendering_info.setColorAttachments(color_attachment)
+		.setPDepthAttachment(nullptr);
+	command_buffer.beginRendering(rendering_info);
+	m_imgui->render(command_buffer);
 	command_buffer.endRendering();
 }
 
