@@ -1,10 +1,10 @@
 #pragma once
 #include <dear_imgui.hpp>
 #include <gpu.hpp>
+#include <pipeline_builder.hpp>
 #include <resource_buffering.hpp>
 #include <scoped_waiter.hpp>
 #include <swapchain.hpp>
-#include <vulkan/vulkan.hpp>
 #include <window.hpp>
 #include <filesystem>
 
@@ -35,6 +35,7 @@ class App {
 	void create_swapchain();
 	void create_render_sync();
 	void create_imgui();
+	void create_pipeline_builder();
 	void create_pipeline();
 
 	[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
@@ -67,6 +68,10 @@ class App {
 	std::size_t m_frame_index{};
 
 	std::optional<DearImGui> m_imgui{};
+	std::optional<PipelineBuilder> m_pipeline_builder{};
+
+	vk::UniquePipelineLayout m_pipeline_layout{};
+	vk::UniquePipeline m_pipeline{};
 
 	glm::ivec2 m_framebuffer_size{};
 	std::optional<RenderTarget> m_render_target{};

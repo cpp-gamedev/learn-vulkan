@@ -40,6 +40,7 @@ void App::run(std::string_view const assets_dir) {
 	create_swapchain();
 	create_render_sync();
 	create_imgui();
+	create_pipeline_builder();
 
 	create_pipeline();
 
@@ -177,8 +178,13 @@ void App::create_imgui() {
 	m_imgui.emplace(imgui_ci);
 }
 
-auto App::asset_path(std::string_view const uri) const -> fs::path {
-	return m_assets_dir / uri;
+void App::create_pipeline_builder() {
+	auto const pipeline_builder_ci = PipelineBuilder::CreateInfo{
+		.device = *m_device,
+		.samples = vk::SampleCountFlagBits::e1,
+		.color_format = m_swapchain->get_format(),
+	};
+	m_pipeline_builder.emplace(pipeline_builder_ci);
 }
 
 void App::create_pipeline() {
@@ -192,7 +198,19 @@ void App::create_pipeline() {
 	}
 	std::println("[lvk] Shaders loaded");
 
-	// TODO
+	m_pipeline_layout = m_device->createPipelineLayoutUnique({});
+	auto const pipeline_state = PipelineState{
+		.vertex_shader = *vertex,
+		.fragment_shader = *fragment,
+	};
+	m_pipeline = m_pipeline_builder->build(*m_pipeline_layout, pipeline_state);
+	if (!m_pipeline) {
+		throw std::runtime_error{"Failed to create Graphics Pipeline"};
+	}
+}
+
+auto App::asset_path(std::string_view const uri) const -> fs::path {
+	return m_assets_dir / uri;
 }
 
 void App::main_loop() {
@@ -282,7 +300,15 @@ void App::render(vk::CommandBuffer const command_buffer) {
 
 	command_buffer.beginRendering(rendering_info);
 	ImGui::ShowDemoWindow();
-	// draw stuff here.
+	command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_pipeline);
+	auto viewport = vk::Viewport{};
+	viewport.setX(0.0f)
+		.setY(static_cast<float>(m_render_target->extent.height))
+		.setWidth(static_cast<float>(m_render_target->extent.width))
+		.setHeight(-viewport.y);
+	command_buffer.setViewport(0, viewport);
+	command_buffer.setScissor(0, render_area);
+	command_buffer.draw(3, 1, 0, 0);
 	command_buffer.endRendering();
 
 	m_imgui->end_frame();
