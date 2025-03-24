@@ -1,15 +1,19 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
+#include <cstdint>
+#include <span>
 
 namespace lvk {
+// bit flags for various binary Pipeline States.
 struct PipelineFlag {
 	enum : std::uint8_t {
 		None = 0,
-		AlphaBlend = 1 << 0,
-		DepthTest = 1 << 1,
+		AlphaBlend = 1 << 0, // turn on alpha blending.
+		DepthTest = 1 << 1,	 // turn on depth write and test.
 	};
 };
 
+// specification of a unique Graphics Pipeline.
 struct PipelineState {
 	using Flag = PipelineFlag;
 
@@ -17,8 +21,11 @@ struct PipelineState {
 		return Flag::AlphaBlend | Flag::DepthTest;
 	}
 
-	vk::ShaderModule vertex_shader;
-	vk::ShaderModule fragment_shader;
+	vk::ShaderModule vertex_shader;	  // required.
+	vk::ShaderModule fragment_shader; // required.
+
+	std::span<vk::VertexInputAttributeDescription const> vertex_attributes{};
+	std::span<vk::VertexInputBindingDescription const> vertex_bindings{};
 
 	vk::PrimitiveTopology topology{vk::PrimitiveTopology::eTriangleList};
 	vk::PolygonMode polygon_mode{vk::PolygonMode::eFill};

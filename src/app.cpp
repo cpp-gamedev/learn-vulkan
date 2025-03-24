@@ -199,6 +199,7 @@ void App::create_pipeline() {
 	std::println("[lvk] Shaders loaded");
 
 	m_pipeline_layout = m_device->createPipelineLayoutUnique({});
+
 	auto const pipeline_state = PipelineState{
 		.vertex_shader = *vertex,
 		.fragment_shader = *fragment,
@@ -290,7 +291,7 @@ void App::render(vk::CommandBuffer const command_buffer) {
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		// temporarily red.
-		.setClearValue(vk::ClearColorValue{1.0f, 0.0f, 0.0f, 1.0f});
+		.setClearValue(vk::ClearColorValue{0.0f, 0.0f, 0.0f, 1.0f});
 	auto rendering_info = vk::RenderingInfo{};
 	auto const render_area =
 		vk::Rect2D{vk::Offset2D{}, m_render_target->extent};
@@ -300,15 +301,20 @@ void App::render(vk::CommandBuffer const command_buffer) {
 
 	command_buffer.beginRendering(rendering_info);
 	ImGui::ShowDemoWindow();
+
 	command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_pipeline);
 	auto viewport = vk::Viewport{};
+	// flip the viewport across the X-axis (negative height):
+	// https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
 	viewport.setX(0.0f)
 		.setY(static_cast<float>(m_render_target->extent.height))
 		.setWidth(static_cast<float>(m_render_target->extent.width))
 		.setHeight(-viewport.y);
 	command_buffer.setViewport(0, viewport);
 	command_buffer.setScissor(0, render_area);
+	// current shader has hard-coded logic for 3 vertices.
 	command_buffer.draw(3, 1, 0, 0);
+
 	command_buffer.endRendering();
 
 	m_imgui->end_frame();

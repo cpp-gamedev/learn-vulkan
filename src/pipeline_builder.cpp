@@ -7,6 +7,7 @@ PipelineBuilder::PipelineBuilder(CreateInfo const& create_info)
 auto PipelineBuilder::build(vk::PipelineLayout const layout,
 							PipelineState const& state) const
 	-> vk::UniquePipeline {
+	// set vertex (0) and fragment (1) shader stages.
 	auto shader_stages = std::array<vk::PipelineShaderStageCreateInfo, 2>{};
 	shader_stages[0]
 		.setStage(vk::ShaderStageFlagBits::eVertex)
@@ -16,6 +17,10 @@ auto PipelineBuilder::build(vk::PipelineLayout const layout,
 		.setStage(vk::ShaderStageFlagBits::eFragment)
 		.setPName("main")
 		.setModule(state.fragment_shader);
+
+	auto pvisci = vk::PipelineVertexInputStateCreateInfo{};
+	pvisci.setVertexAttributeDescriptions(state.vertex_attributes)
+		.setVertexBindingDescriptions(state.vertex_bindings);
 
 	auto prsci = vk::PipelineRasterizationStateCreateInfo{};
 	prsci.setPolygonMode(state.polygon_mode).setCullMode(state.cull_mode);
@@ -44,6 +49,7 @@ auto PipelineBuilder::build(vk::PipelineLayout const layout,
 	auto pcbsci = vk::PipelineColorBlendStateCreateInfo{};
 	pcbsci.setAttachments(pcbas);
 
+	// these dynamic states are guaranteed to be available.
 	auto const pdscis = std::array{
 		vk::DynamicState::eViewport,
 		vk::DynamicState::eScissor,
@@ -52,6 +58,7 @@ auto PipelineBuilder::build(vk::PipelineLayout const layout,
 	auto pdsci = vk::PipelineDynamicStateCreateInfo{};
 	pdsci.setDynamicStates(pdscis);
 
+	// single viewport and scissor.
 	auto const pvsci = vk::PipelineViewportStateCreateInfo({}, 1, {}, 1);
 
 	auto pmsci = vk::PipelineMultisampleStateCreateInfo{};
@@ -59,6 +66,7 @@ auto PipelineBuilder::build(vk::PipelineLayout const layout,
 		.setSampleShadingEnable(vk::False);
 
 	auto prci = vk::PipelineRenderingCreateInfo{};
+	// could be a depth-only pass.
 	if (m_info.color_format != vk::Format::eUndefined) {
 		prci.setColorAttachmentFormats(m_info.color_format);
 	}
@@ -77,6 +85,7 @@ auto PipelineBuilder::build(vk::PipelineLayout const layout,
 		.setPNext(&prci);
 
 	auto ret = vk::Pipeline{};
+	// use non-throwing API.
 	if (m_info.device.createGraphicsPipelines({}, 1, &gpci, {}, &ret) !=
 		vk::Result::eSuccess) {
 		return {};
