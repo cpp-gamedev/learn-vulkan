@@ -33,8 +33,14 @@ Start a new ImGui frame after resetting the render fence, and show the demo wind
 m_device->resetFences(*render_sync.drawn);
 m_imgui->new_frame();
 
+// ...
+render_sync.command_buffer.beginRendering(rendering_info);
 ImGui::ShowDemoWindow();
+// draw stuff here.
+render_sync.command_buffer.endRendering();
 ```
+
+ImGui doesn't draw anything here (the actual draw command requires the Command Buffer), it's just a good customization point to use indirection at later.
 
 We use a separate render pass for Dear ImGui, again for isolation, and to enable us to change the main render pass later, eg by adding a depth buffer attachment (`DearImGui` is setup assuming its render pass will only use a single color attachment).
 

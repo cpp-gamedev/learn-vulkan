@@ -183,8 +183,6 @@ void App::main_loop() {
 		m_device->resetFences(*render_sync.drawn);
 		m_imgui->new_frame();
 
-		ImGui::ShowDemoWindow();
-
 		auto command_buffer_bi = vk::CommandBufferBeginInfo{};
 		// this flag means recorded commands will not be reused.
 		command_buffer_bi.setFlags(
@@ -222,6 +220,7 @@ void App::main_loop() {
 			.setLayerCount(1);
 
 		render_sync.command_buffer.beginRendering(rendering_info);
+		ImGui::ShowDemoWindow();
 		// draw stuff here.
 		render_sync.command_buffer.endRendering();
 
