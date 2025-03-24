@@ -24,3 +24,6 @@
 - [Dear ImGui](dear_imgui/README.md)
   - [class DearImGui](dear_imgui/dear_imgui.md)
   - [ImGui Integration](dear_imgui/imgui_integration.md)
+- [Graphics Pipeline](pipeline/README.md)
+  - [Locating Assets](pipeline/locating_assets.md)
+  - [Shaders](pipeline/shaders.md)

@@ -6,11 +6,14 @@
 #include <swapchain.hpp>
 #include <vulkan/vulkan.hpp>
 #include <window.hpp>
+#include <filesystem>
 
 namespace lvk {
+namespace fs = std::filesystem;
+
 class App {
   public:
-	void run();
+	void run(std::string_view assets_dir);
 
   private:
 	struct RenderSync {
@@ -32,6 +35,9 @@ class App {
 	void create_swapchain();
 	void create_render_sync();
 	void create_imgui();
+	void create_pipeline();
+
+	[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
 
 	void main_loop();
 
@@ -41,6 +47,8 @@ class App {
 	void render(vk::CommandBuffer command_buffer);
 	void transition_for_present(vk::CommandBuffer command_buffer) const;
 	void submit_and_present();
+
+	fs::path m_assets_dir{};
 
 	// the order of these RAII members is crucially important.
 	glfw::Window m_window{};

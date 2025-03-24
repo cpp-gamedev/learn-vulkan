@@ -1,4 +1,5 @@
 #include <app.hpp>
+#include <shader_loader.hpp>
 #include <cassert>
 #include <chrono>
 #include <print>
@@ -9,7 +10,28 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 namespace lvk {
 using namespace std::chrono_literals;
 
-void App::run() {
+namespace {
+[[nodiscard]] auto locate_assets_dir(std::string_view const in) -> fs::path {
+	if (!in.empty()) {
+		std::println("[lvk] Using custom assets directory: '{}'", in);
+		return in;
+	}
+	// look for '<path>/assets/', starting from the working
+	// directory and walking up the parent directory tree.
+	static constexpr std::string_view dir_name_v{"assets"};
+	for (auto path = fs::current_path();
+		 !path.empty() && path.has_parent_path(); path = path.parent_path()) {
+		auto ret = path / dir_name_v;
+		if (fs::is_directory(ret)) { return ret; }
+	}
+	std::println("[lvk] Warning: could not locate 'assets' directory");
+	return fs::current_path();
+}
+} // namespace
+
+void App::run(std::string_view const assets_dir) {
+	m_assets_dir = locate_assets_dir(assets_dir);
+
 	create_window();
 	create_instance();
 	create_surface();
@@ -18,6 +40,8 @@ void App::run() {
 	create_swapchain();
 	create_render_sync();
 	create_imgui();
+
+	create_pipeline();
 
 	main_loop();
 }
@@ -151,6 +175,24 @@ void App::create_imgui() {
 		.samples = vk::SampleCountFlagBits::e1,
 	};
 	m_imgui.emplace(imgui_ci);
+}
+
+auto App::asset_path(std::string_view const uri) const -> fs::path {
+	return m_assets_dir / uri;
+}
+
+void App::create_pipeline() {
+	auto shader_loader = ShaderLoader{*m_device};
+	// we only need shader modules to create the pipeline, thus no need to store
+	// them as members.
+	auto const vertex = shader_loader.load(asset_path("shader.vert"));
+	auto const fragment = shader_loader.load(asset_path("shader.frag"));
+	if (!vertex || !fragment) {
+		throw std::runtime_error{"Failed to load Shaders"};
+	}
+	std::println("[lvk] Shaders loaded");
+
+	// TODO
 }
 
 void App::main_loop() {
