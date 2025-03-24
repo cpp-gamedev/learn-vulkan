@@ -33,6 +33,13 @@ class App {
 
 	void main_loop();
 
+	auto acquire_render_target() -> bool;
+	auto wait_for_frame() -> vk::CommandBuffer;
+	void transition_for_render(vk::CommandBuffer command_buffer) const;
+	void render(vk::CommandBuffer command_buffer);
+	void transition_for_present(vk::CommandBuffer command_buffer) const;
+	void submit_and_present();
+
 	// the order of these RAII members is crucially important.
 	glfw::Window m_window{};
 	vk::UniqueInstance m_instance{};
@@ -48,6 +55,9 @@ class App {
 	Buffered<RenderSync> m_render_sync{};
 	// Current virtual frame index.
 	std::size_t m_frame_index{};
+
+	glm::ivec2 m_framebuffer_size{};
+	std::optional<RenderTarget> m_render_target{};
 
 	// waiter must be the last member to ensure it blocks until device is idle
 	// before other members get destroyed.
