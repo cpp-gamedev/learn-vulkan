@@ -13,9 +13,8 @@ constexpr auto dynamic_states_v = std::array{
 	vk::DynamicState::eLineWidth,
 };
 
-[[nodiscard]] constexpr auto
-create_shader_stages(vk::ShaderModule const vertex,
-					 vk::ShaderModule const fragment) {
+[[nodiscard]] auto create_shader_stages(vk::ShaderModule const vertex,
+										vk::ShaderModule const fragment) {
 	// set vertex (0) and fragment (1) shader stages.
 	auto ret = std::array<vk::PipelineShaderStageCreateInfo, 2>{};
 	ret[0]
