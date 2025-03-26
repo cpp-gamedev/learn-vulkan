@@ -1,4 +1,5 @@
 #include <pipeline_builder.hpp>
+#include <print>
 
 namespace lvk {
 namespace {
@@ -121,6 +122,7 @@ auto PipelineBuilder::build(vk::PipelineLayout const layout,
 	// use non-throwing API.
 	if (m_info.device.createGraphicsPipelines({}, 1, &pipeline_ci, {}, &ret) !=
 		vk::Result::eSuccess) {
+		std::println(stderr, "[lvk] Failed to create Graphics Pipeline");
 		return {};
 	}
 
