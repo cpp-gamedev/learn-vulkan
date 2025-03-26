@@ -27,4 +27,4 @@
 - [Graphics Pipeline](pipeline/README.md)
   - [Locating Assets](pipeline/locating_assets.md)
   - [Shaders](pipeline/shaders.md)
-  - [Pipeline Creation](pipeline/creation.md)
+  - [Pipeline Creation](pipeline/pipeline_creation.md)

@@ -37,6 +37,8 @@ glslc src/glsl/shader.vert -o assets/shader.vert
 glslc src/glsl/shader.frag -o assets/shader.frag
 ```
 
+> glslc is part of the Vulkan SDK.
+
 ## Shader Modules
 
 SPIR-V modules are binary files with a stride/alignment of 4 bytes. The Vulkan API accepts a span of `std::uint32_t`s, so we need to load it into such a buffer (and _not_ `std::vector<std::byte>` or other 1-byte equivalents).

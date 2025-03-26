@@ -303,8 +303,10 @@ void App::render(vk::CommandBuffer const command_buffer) {
 	ImGui::ShowDemoWindow();
 
 	command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_pipeline);
+	// we are creating pipelines with dynamic viewport and scissor states.
+	// they must be set here after binding (before drawing).
 	auto viewport = vk::Viewport{};
-	// flip the viewport across the X-axis (negative height):
+	// flip the viewport about the X-axis (negative height):
 	// https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
 	viewport.setX(0.0f)
 		.setY(static_cast<float>(m_render_target->extent.height))
