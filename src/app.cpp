@@ -42,7 +42,7 @@ void App::run(std::string_view const assets_dir) {
 	create_imgui();
 	create_pipeline_builder();
 
-	create_pipeline();
+	create_pipelines();
 
 	main_loop();
 }
@@ -187,10 +187,10 @@ void App::create_pipeline_builder() {
 	m_pipeline_builder.emplace(pipeline_builder_ci);
 }
 
-void App::create_pipeline() {
+void App::create_pipelines() {
 	auto shader_loader = ShaderLoader{*m_device};
-	// we only need shader modules to create the pipeline, thus no need to store
-	// them as members.
+	// we only need shader modules to create the pipelines, thus no need to
+	// store them as members.
 	auto const vertex = shader_loader.load(asset_path("shader.vert"));
 	auto const fragment = shader_loader.load(asset_path("shader.frag"));
 	if (!vertex || !fragment) {
@@ -200,13 +200,17 @@ void App::create_pipeline() {
 
 	m_pipeline_layout = m_device->createPipelineLayoutUnique({});
 
-	auto const pipeline_state = PipelineState{
+	auto pipeline_state = PipelineState{
 		.vertex_shader = *vertex,
 		.fragment_shader = *fragment,
 	};
-	m_pipeline = m_pipeline_builder->build(*m_pipeline_layout, pipeline_state);
-	if (!m_pipeline) {
-		throw std::runtime_error{"Failed to create Graphics Pipeline"};
+	m_pipelines.standard =
+		m_pipeline_builder->build(*m_pipeline_layout, pipeline_state);
+	pipeline_state.polygon_mode = vk::PolygonMode::eLine;
+	m_pipelines.wireframe =
+		m_pipeline_builder->build(*m_pipeline_layout, pipeline_state);
+	if (!m_pipelines.standard || !m_pipelines.wireframe) {
+		throw std::runtime_error{"Failed to create Graphics Pipelines"};
 	}
 }
 
@@ -300,23 +304,8 @@ void App::render(vk::CommandBuffer const command_buffer) {
 		.setLayerCount(1);
 
 	command_buffer.beginRendering(rendering_info);
-	ImGui::ShowDemoWindow();
-
-	command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_pipeline);
-	// we are creating pipelines with dynamic viewport and scissor states.
-	// they must be set here after binding (before drawing).
-	auto viewport = vk::Viewport{};
-	// flip the viewport about the X-axis (negative height):
-	// https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
-	viewport.setX(0.0f)
-		.setY(static_cast<float>(m_render_target->extent.height))
-		.setWidth(static_cast<float>(m_render_target->extent.width))
-		.setHeight(-viewport.y);
-	command_buffer.setViewport(0, viewport);
-	command_buffer.setScissor(0, render_area);
-	// current shader has hard-coded logic for 3 vertices.
-	command_buffer.draw(3, 1, 0, 0);
-
+	inspect();
+	draw(render_area, command_buffer);
 	command_buffer.endRendering();
 
 	m_imgui->end_frame();
@@ -371,5 +360,45 @@ void App::submit_and_present() {
 	if (!m_swapchain->present(m_queue, *render_sync.present)) {
 		m_swapchain->recreate(m_framebuffer_size);
 	}
+}
+
+void App::inspect() {
+	ImGui::ShowDemoWindow();
+
+	ImGui::SetNextWindowSize({200.0f, 100.0f}, ImGuiCond_Once);
+	if (ImGui::Begin("Inspect")) {
+		ImGui::Checkbox("wireframe", &m_wireframe);
+		if (m_wireframe) {
+			auto const& line_width_range =
+				m_gpu.properties.limits.lineWidthRange;
+			ImGui::SetNextItemWidth(100.0f);
+			ImGui::DragFloat("line width", &m_line_width, 0.25f,
+							 line_width_range[0], line_width_range[1]);
+		}
+	}
+	ImGui::End();
+}
+
+void App::draw(vk::Rect2D const& render_area,
+			   vk::CommandBuffer const command_buffer) const {
+	auto const pipeline =
+		m_wireframe ? *m_pipelines.wireframe : *m_pipelines.standard;
+	command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+	// we are creating pipelines with dynamic viewport and scissor states.
+	// they must be set here after binding (before drawing).
+	auto viewport = vk::Viewport{};
+	// flip the viewport about the X-axis (negative height):
+	// https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
+	viewport.setX(0.0f)
+		.setY(static_cast<float>(m_render_target->extent.height))
+		.setWidth(static_cast<float>(m_render_target->extent.width))
+		.setHeight(-viewport.y);
+	command_buffer.setViewport(0, viewport);
+	command_buffer.setScissor(0, render_area);
+	// line width is also a dynamic state in our pipelines, but setting it is
+	// not required (defaults to 1.0f).
+	command_buffer.setLineWidth(m_line_width);
+	// current shader has hard-coded logic for 3 vertices.
+	command_buffer.draw(3, 1, 0, 0);
 }
 } // namespace lvk

@@ -36,7 +36,7 @@ class App {
 	void create_render_sync();
 	void create_imgui();
 	void create_pipeline_builder();
-	void create_pipeline();
+	void create_pipelines();
 
 	[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
 
@@ -48,6 +48,12 @@ class App {
 	void render(vk::CommandBuffer command_buffer);
 	void transition_for_present(vk::CommandBuffer command_buffer) const;
 	void submit_and_present();
+
+	// ImGui code goes here.
+	void inspect();
+	// Issue draw calls here.
+	void draw(vk::Rect2D const& render_area,
+			  vk::CommandBuffer command_buffer) const;
 
 	fs::path m_assets_dir{};
 
@@ -71,7 +77,12 @@ class App {
 	std::optional<PipelineBuilder> m_pipeline_builder{};
 
 	vk::UniquePipelineLayout m_pipeline_layout{};
-	vk::UniquePipeline m_pipeline{};
+	struct {
+		vk::UniquePipeline standard{};
+		vk::UniquePipeline wireframe{};
+	} m_pipelines{};
+	float m_line_width{1.0f};
+	bool m_wireframe{};
 
 	glm::ivec2 m_framebuffer_size{};
 	std::optional<RenderTarget> m_render_target{};

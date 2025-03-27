@@ -93,22 +93,18 @@ auto ShaderLoader::load(fs::path const& path) -> vk::UniqueShaderModule {
 Add new members to `App`:
 
 ```cpp
-void create_pipeline();
+void create_pipelines();
 
 [[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
 ```
 
-Implement and call `create_pipeline()` before starting the main loop:
+Add code to load shaders in `create_pipelines()` and call it before starting the main loop:
 
 ```cpp
-auto App::asset_path(std::string_view const uri) const -> fs::path {
-  return m_assets_dir / uri;
-}
-
-void App::create_pipeline() {
+void App::create_pipelines() {
   auto shader_loader = ShaderLoader{*m_device};
-  // we only need shader modules to create the pipeline, thus no need to store
-  // them as members.
+  // we only need shader modules to create the pipelines, thus no need to
+  // store them as members.
   auto const vertex = shader_loader.load(asset_path("shader.vert"));
   auto const fragment = shader_loader.load(asset_path("shader.frag"));
   if (!vertex || !fragment) {
@@ -117,5 +113,9 @@ void App::create_pipeline() {
   std::println("[lvk] Shaders loaded");
 
   // TODO
+}
+
+auto App::asset_path(std::string_view const uri) const -> fs::path {
+  return m_assets_dir / uri;
 }
 ```

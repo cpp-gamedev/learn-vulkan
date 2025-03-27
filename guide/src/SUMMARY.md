@@ -28,3 +28,5 @@
   - [Locating Assets](pipeline/locating_assets.md)
   - [Shaders](pipeline/shaders.md)
   - [Pipeline Creation](pipeline/pipeline_creation.md)
+  - [Drawing a Triangle](pipeline/drawing_triangle.md)
+  - [Switching Pipelines](pipeline/switching_pipelines.md)
