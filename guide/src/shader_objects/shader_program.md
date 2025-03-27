@@ -1,6 +1,21 @@
 # Shader Program
 
-SPIR-V modules are binary files with a stride/alignment of 4 bytes. The Vulkan API accepts a span of `std::uint32_t`s, so we need to load it into such a buffer (and _not_ `std::vector<std::byte>` or other 1-byte equivalents). We will encapsulate both vertex and fragment shaders into a single `ShaderProgram`, which will also bind the shaders before a draw, and expose/set various dynamic states.
+To use Shader Objects we need to enable the corresponding feature and extension during device creation:
+
+```cpp
+auto shader_object_feature =
+  vk::PhysicalDeviceShaderObjectFeaturesEXT{vk::True};
+dynamic_rendering_feature.setPNext(&shader_object_feature);
+
+// ...
+// we need two device extensions: Swapchain and Shader Object.
+static constexpr auto extensions_v = std::array{
+  VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+  "VK_EXT_shader_object",
+};
+```
+
+We will encapsulate both vertex and fragment shaders into a single `ShaderProgram`, which will also bind the shaders before a draw, and expose/set various dynamic states.
 
 In `shader_program.hpp`, first add a `ShaderProgramCreateInfo` struct:
 
@@ -231,37 +246,5 @@ void ShaderProgram::bind_shaders(vk::CommandBuffer const command_buffer) const {
     *m_shaders[1],
   };
   command_buffer.bindShadersEXT(stages_v, shaders);
-}
-```
-
-## TODO: MOVE
-
-Add new members to `App`:
-
-```cpp
-void create_pipelines();
-
-[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
-```
-
-Add code to load shaders in `create_pipelines()` and call it before starting the main loop:
-
-```cpp
-void App::create_pipelines() {
-  auto shader_loader = ShaderLoader{*m_device};
-  // we only need shader modules to create the pipelines, thus no need to
-  // store them as members.
-  auto const vertex = shader_loader.load(asset_path("shader.vert"));
-  auto const fragment = shader_loader.load(asset_path("shader.frag"));
-  if (!vertex || !fragment) {
-    throw std::runtime_error{"Failed to load Shaders"};
-  }
-  std::println("[lvk] Shaders loaded");
-
-  // TODO
-}
-
-auto App::asset_path(std::string_view const uri) const -> fs::path {
-  return m_assets_dir / uri;
 }
 ```

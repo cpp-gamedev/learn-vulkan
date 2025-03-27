@@ -134,7 +134,7 @@ void App::create_device() {
 	dynamic_rendering_feature.setPNext(&shader_object_feature);
 
 	auto device_ci = vk::DeviceCreateInfo{};
-	// we only need one device extension: Swapchain.
+	// we need two device extensions: Swapchain and Shader Object.
 	static constexpr auto extensions_v = std::array{
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		"VK_EXT_shader_object",

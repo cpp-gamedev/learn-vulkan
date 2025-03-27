@@ -3,13 +3,16 @@
 Add a `ShaderProgram` to `App` and its create function:
 
 ```cpp
+[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
+
+// ...
 void create_shader();
 
 // ...
 std::optional<ShaderProgram> m_shader{};
 ```
 
-Implement and call `create_shader()`:
+Implement and call `create_shader()` (and `asset_path()`):
 
 ```cpp
 void App::create_shader() {
@@ -21,6 +24,10 @@ void App::create_shader() {
     .fragment_spirv = fragment_spirv,
   };
   m_shader.emplace(shader_ci);
+}
+
+auto App::asset_path(std::string_view const uri) const -> fs::path {
+  return m_assets_dir / uri;
 }
 ```
 
