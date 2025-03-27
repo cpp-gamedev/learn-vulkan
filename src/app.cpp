@@ -40,6 +40,7 @@ void App::run(std::string_view const assets_dir) {
 	create_swapchain();
 	create_render_sync();
 	create_imgui();
+	create_shader();
 	create_pipeline_builder();
 
 	create_pipelines();
@@ -106,11 +107,16 @@ void App::create_device() {
 	// and later device_ci.pNext => sync_feature.
 	// this is 'pNext chaining'.
 	sync_feature.setPNext(&dynamic_rendering_feature);
+	auto shader_object_feature =
+		vk::PhysicalDeviceShaderObjectFeaturesEXT{vk::True};
+	dynamic_rendering_feature.setPNext(&shader_object_feature);
 
 	auto device_ci = vk::DeviceCreateInfo{};
 	// we only need one device extension: Swapchain.
-	static constexpr auto extensions_v =
-		std::array{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+	static constexpr auto extensions_v = std::array{
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		"VK_EXT_shader_object",
+	};
 	device_ci.setPEnabledExtensionNames(extensions_v)
 		.setQueueCreateInfos(queue_ci)
 		.setPEnabledFeatures(&enabled_features)
@@ -176,6 +182,19 @@ void App::create_imgui() {
 		.samples = vk::SampleCountFlagBits::e1,
 	};
 	m_imgui.emplace(imgui_ci);
+}
+
+void App::create_shader() {
+	auto const vertex_spirv =
+		to_spir_v(asset_path("shader.vert").string().c_str());
+	auto const fragment_spirv =
+		to_spir_v(asset_path("shader.frag").string().c_str());
+	auto const shader_ci = ShaderProgram::CreateInfo{
+		.device = *m_device,
+		.vertex_spirv = vertex_spirv,
+		.fragment_spirv = fragment_spirv,
+	};
+	m_shader.emplace(shader_ci);
 }
 
 void App::create_pipeline_builder() {
@@ -307,7 +326,7 @@ void App::render(vk::CommandBuffer const command_buffer) {
 
 	command_buffer.beginRendering(rendering_info);
 	inspect();
-	draw(render_area, command_buffer);
+	draw(command_buffer);
 	command_buffer.endRendering();
 
 	m_imgui->end_frame();
@@ -375,37 +394,23 @@ void App::inspect() {
 
 	ImGui::SetNextWindowSize({200.0f, 100.0f}, ImGuiCond_Once);
 	if (ImGui::Begin("Inspect")) {
-		ImGui::Checkbox("wireframe", &m_wireframe);
+		if (ImGui::Checkbox("wireframe", &m_wireframe)) {
+			m_shader->polygon_mode =
+				m_wireframe ? vk::PolygonMode::eLine : vk::PolygonMode::eFill;
+		}
 		if (m_wireframe) {
 			auto const& line_width_range =
 				m_gpu.properties.limits.lineWidthRange;
 			ImGui::SetNextItemWidth(100.0f);
-			ImGui::DragFloat("line width", &m_line_width, 0.25f,
+			ImGui::DragFloat("line width", &m_shader->line_width, 0.25f,
 							 line_width_range[0], line_width_range[1]);
 		}
 	}
 	ImGui::End();
 }
 
-void App::draw(vk::Rect2D const& render_area,
-			   vk::CommandBuffer const command_buffer) const {
-	auto const pipeline =
-		m_wireframe ? *m_pipelines.wireframe : *m_pipelines.standard;
-	command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-	// we are creating pipelines with dynamic viewport and scissor states.
-	// they must be set here after binding (before drawing).
-	auto viewport = vk::Viewport{};
-	// flip the viewport about the X-axis (negative height):
-	// https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
-	viewport.setX(0.0f)
-		.setY(static_cast<float>(m_render_target->extent.height))
-		.setWidth(static_cast<float>(m_render_target->extent.width))
-		.setHeight(-viewport.y);
-	command_buffer.setViewport(0, viewport);
-	command_buffer.setScissor(0, render_area);
-	// line width is also a dynamic state in our pipelines, but setting it is
-	// not required (defaults to 1.0f).
-	command_buffer.setLineWidth(m_line_width);
+void App::draw(vk::CommandBuffer const command_buffer) const {
+	m_shader->bind(command_buffer, m_framebuffer_size);
 	// current shader has hard-coded logic for 3 vertices.
 	command_buffer.draw(3, 1, 0, 0);
 }

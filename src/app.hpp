@@ -4,6 +4,7 @@
 #include <pipeline_builder.hpp>
 #include <resource_buffering.hpp>
 #include <scoped_waiter.hpp>
+#include <shader_program.hpp>
 #include <swapchain.hpp>
 #include <window.hpp>
 #include <filesystem>
@@ -35,6 +36,7 @@ class App {
 	void create_swapchain();
 	void create_render_sync();
 	void create_imgui();
+	void create_shader();
 	void create_pipeline_builder();
 	void create_pipelines();
 
@@ -52,8 +54,7 @@ class App {
 	// ImGui code goes here.
 	void inspect();
 	// Issue draw calls here.
-	void draw(vk::Rect2D const& render_area,
-			  vk::CommandBuffer command_buffer) const;
+	void draw(vk::CommandBuffer command_buffer) const;
 
 	fs::path m_assets_dir{};
 
@@ -83,6 +84,8 @@ class App {
 	} m_pipelines{};
 	float m_line_width{1.0f};
 	bool m_wireframe{};
+
+	std::optional<ShaderProgram> m_shader{};
 
 	glm::ivec2 m_framebuffer_size{};
 	std::optional<RenderTarget> m_render_target{};
