@@ -1,7 +1,7 @@
 #include <app.hpp>
-#include <shader_loader.hpp>
 #include <cassert>
 #include <chrono>
+#include <fstream>
 #include <print>
 #include <ranges>
 
@@ -27,6 +27,31 @@ namespace {
 	std::println("[lvk] Warning: could not locate 'assets' directory");
 	return fs::current_path();
 }
+
+[[nodiscard]] auto to_spir_v(fs::path const& path)
+	-> std::vector<std::uint32_t> {
+	// open the file at the end, to get the total size.
+	auto file = std::ifstream{path, std::ios::binary | std::ios::ate};
+	if (!file.is_open()) {
+		throw std::runtime_error{
+			std::format("Failed to open file: '{}'", path.generic_string())};
+	}
+
+	auto const size = file.tellg();
+	auto const usize = static_cast<std::uint64_t>(size);
+	// file data must be uint32 aligned.
+	if (usize % sizeof(std::uint32_t) != 0) {
+		throw std::runtime_error{std::format("Invalid SPIR-V size: {}", usize)};
+	}
+
+	// seek to the beginning before reading.
+	file.seekg({}, std::ios::beg);
+	auto ret = std::vector<std::uint32_t>{};
+	ret.resize(usize / sizeof(std::uint32_t));
+	void* data = ret.data();
+	file.read(static_cast<char*>(data), size);
+	return ret;
+}
 } // namespace
 
 void App::run(std::string_view const assets_dir) {
@@ -41,9 +66,6 @@ void App::run(std::string_view const assets_dir) {
 	create_render_sync();
 	create_imgui();
 	create_shader();
-	create_pipeline_builder();
-
-	create_pipelines();
 
 	main_loop();
 }
@@ -185,52 +207,14 @@ void App::create_imgui() {
 }
 
 void App::create_shader() {
-	auto const vertex_spirv =
-		to_spir_v(asset_path("shader.vert").string().c_str());
-	auto const fragment_spirv =
-		to_spir_v(asset_path("shader.frag").string().c_str());
+	auto const vertex_spirv = to_spir_v(asset_path("shader.vert"));
+	auto const fragment_spirv = to_spir_v(asset_path("shader.frag"));
 	auto const shader_ci = ShaderProgram::CreateInfo{
 		.device = *m_device,
 		.vertex_spirv = vertex_spirv,
 		.fragment_spirv = fragment_spirv,
 	};
 	m_shader.emplace(shader_ci);
-}
-
-void App::create_pipeline_builder() {
-	auto const pipeline_builder_ci = PipelineBuilder::CreateInfo{
-		.device = *m_device,
-		.samples = vk::SampleCountFlagBits::e1,
-		.color_format = m_swapchain->get_format(),
-	};
-	m_pipeline_builder.emplace(pipeline_builder_ci);
-}
-
-void App::create_pipelines() {
-	auto shader_loader = ShaderLoader{*m_device};
-	// we only need shader modules to create the pipelines, thus no need to
-	// store them as members.
-	auto const vertex = shader_loader.load(asset_path("shader.vert"));
-	auto const fragment = shader_loader.load(asset_path("shader.frag"));
-	if (!vertex || !fragment) {
-		throw std::runtime_error{"Failed to load Shaders"};
-	}
-	std::println("[lvk] Shaders loaded");
-
-	m_pipeline_layout = m_device->createPipelineLayoutUnique({});
-
-	auto pipeline_state = PipelineState{
-		.vertex_shader = *vertex,
-		.fragment_shader = *fragment,
-	};
-	m_pipelines.standard =
-		m_pipeline_builder->build(*m_pipeline_layout, pipeline_state);
-	pipeline_state.polygon_mode = vk::PolygonMode::eLine;
-	m_pipelines.wireframe =
-		m_pipeline_builder->build(*m_pipeline_layout, pipeline_state);
-	if (!m_pipelines.standard || !m_pipelines.wireframe) {
-		throw std::runtime_error{"Failed to create Graphics Pipelines"};
-	}
 }
 
 auto App::asset_path(std::string_view const uri) const -> fs::path {

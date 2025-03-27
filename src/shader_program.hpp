@@ -1,8 +1,10 @@
 #pragma once
+#include <scoped_waiter.hpp>
 #include <vulkan/vulkan.hpp>
 #include <vector>
 
 namespace lvk {
+// vertex attributes and bindings.
 struct ShaderVertexInput {
 	std::span<vk::VertexInputAttributeDescription2EXT const> attributes{};
 	std::span<vk::VertexInputBindingDescription2EXT const> bindings{};
@@ -27,6 +29,8 @@ class ShaderProgram {
 	static constexpr auto color_blend_equation_v = [] {
 		auto ret = vk::ColorBlendEquationEXT{};
 		ret.setColorBlendOp(vk::BlendOp::eAdd)
+			// standard alpha blending:
+			// (alpha * src) + (1 - alpha) * dst
 			.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
 			.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha);
 		return ret;
@@ -50,17 +54,16 @@ class ShaderProgram {
 
   private:
 	static void set_viewport_scissor(vk::CommandBuffer command_buffer,
-									 glm::ivec2 framebuffer_size);
+									 glm::ivec2 framebuffer);
 	static void set_static_states(vk::CommandBuffer command_buffer);
 	void set_common_states(vk::CommandBuffer command_buffer) const;
 	void set_vertex_states(vk::CommandBuffer command_buffer) const;
 	void set_fragment_states(vk::CommandBuffer command_buffer) const;
 	void bind_shaders(vk::CommandBuffer command_buffer) const;
 
-	vk::Device m_device{};
 	ShaderVertexInput m_vertex_input{};
 	std::vector<vk::UniqueShaderEXT> m_shaders{};
-};
 
-[[nodiscard]] auto to_spir_v(char const* path) -> std::vector<std::uint32_t>;
+	ScopedWaiter m_waiter{};
+};
 } // namespace lvk

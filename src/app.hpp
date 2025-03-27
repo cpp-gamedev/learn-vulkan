@@ -1,7 +1,6 @@
 #pragma once
 #include <dear_imgui.hpp>
 #include <gpu.hpp>
-#include <pipeline_builder.hpp>
 #include <resource_buffering.hpp>
 #include <scoped_waiter.hpp>
 #include <shader_program.hpp>
@@ -37,8 +36,6 @@ class App {
 	void create_render_sync();
 	void create_imgui();
 	void create_shader();
-	void create_pipeline_builder();
-	void create_pipelines();
 
 	[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
 
@@ -75,20 +72,12 @@ class App {
 	std::size_t m_frame_index{};
 
 	std::optional<DearImGui> m_imgui{};
-	std::optional<PipelineBuilder> m_pipeline_builder{};
-
-	vk::UniquePipelineLayout m_pipeline_layout{};
-	struct {
-		vk::UniquePipeline standard{};
-		vk::UniquePipeline wireframe{};
-	} m_pipelines{};
-	float m_line_width{1.0f};
-	bool m_wireframe{};
 
 	std::optional<ShaderProgram> m_shader{};
 
 	glm::ivec2 m_framebuffer_size{};
 	std::optional<RenderTarget> m_render_target{};
+	bool m_wireframe{};
 
 	// waiter must be the last member to ensure it blocks until device is idle
 	// before other members get destroyed.

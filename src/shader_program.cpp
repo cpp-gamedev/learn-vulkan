@@ -1,6 +1,4 @@
 #include <shader_program.hpp>
-#include <fstream>
-#include <print>
 #include <stdexcept>
 
 namespace lvk {
@@ -11,7 +9,7 @@ constexpr auto to_vkbool(bool const value) {
 } // namespace
 
 ShaderProgram::ShaderProgram(CreateInfo const& create_info)
-	: m_device(create_info.device) {
+	: m_vertex_input(create_info.vertex_input) {
 	static auto const create_shader_ci =
 		[](std::span<std::uint32_t const> spirv) {
 			auto ret = vk::ShaderCreateInfoEXT{};
@@ -32,11 +30,12 @@ ShaderProgram::ShaderProgram(CreateInfo const& create_info)
 		.setNextStage(vk::ShaderStageFlagBits::eFragment);
 	shader_cis[1].setStage(vk::ShaderStageFlagBits::eFragment);
 
-	auto result = m_device.createShadersEXTUnique(shader_cis);
+	auto result = create_info.device.createShadersEXTUnique(shader_cis);
 	if (result.result != vk::Result::eSuccess) {
 		throw std::runtime_error{"Failed to create Shader Objects"};
 	}
 	m_shaders = std::move(result.value);
+	m_waiter = create_info.device;
 }
 
 void ShaderProgram::bind(vk::CommandBuffer const command_buffer,
@@ -113,28 +112,3 @@ void ShaderProgram::bind_shaders(vk::CommandBuffer const command_buffer) const {
 	command_buffer.bindShadersEXT(stages_v, shaders);
 }
 } // namespace lvk
-
-auto lvk::to_spir_v(char const* path) -> std::vector<std::uint32_t> {
-	// open the file at the end, to get the total size.
-	auto file = std::ifstream{path, std::ios::binary | std::ios::ate};
-	if (!file.is_open()) {
-		std::println(stderr, "Failed to open file: '{}'", path);
-		return {};
-	}
-
-	auto const size = file.tellg();
-	auto const usize = static_cast<std::uint64_t>(size);
-	// file data must be uint32 aligned.
-	if (usize % sizeof(std::uint32_t) != 0) {
-		std::println(stderr, "Invalid SPIR-V size: {}", usize);
-		return {};
-	}
-
-	// seek to the beginning before reading.
-	file.seekg({}, std::ios::beg);
-	auto ret = std::vector<std::uint32_t>{};
-	ret.resize(usize / sizeof(std::uint32_t));
-	void* data = ret.data();
-	file.read(static_cast<char*>(data), size);
-	return ret;
-}
