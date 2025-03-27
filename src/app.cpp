@@ -141,7 +141,7 @@ void App::main_loop() {
 	while (glfwWindowShouldClose(m_window.get()) == GLFW_FALSE) {
 		glfwPollEvents();
 		if (!acquire_render_target()) { continue; }
-		auto const command_buffer = wait_for_frame();
+		auto const command_buffer = begin_frame();
 		transition_for_render(command_buffer);
 		render(command_buffer);
 		transition_for_present(command_buffer);
@@ -155,22 +155,10 @@ auto App::acquire_render_target() -> bool {
 	if (m_framebuffer_size.x <= 0 || m_framebuffer_size.y <= 0) {
 		return false;
 	}
-	// an eErrorOutOfDateKHR result is not guaranteed if the
-	// framebuffer size does not match the Swapchain image size, check it
-	// explicitly.
-	auto fb_size_changed = m_framebuffer_size != m_swapchain->get_size();
+
 	auto& render_sync = m_render_sync.at(m_frame_index);
-	m_render_target = m_swapchain->acquire_next_image(*render_sync.draw);
-	if (fb_size_changed || !m_render_target) {
-		m_swapchain->recreate(m_framebuffer_size);
-		return false;
-	}
 
-	return true;
-}
-
-auto App::wait_for_frame() -> vk::CommandBuffer {
-	auto const& render_sync = m_render_sync.at(m_frame_index);
+	// wait for the fence to be signaled.
 	static constexpr auto fence_timeout_v =
 		static_cast<std::uint64_t>(std::chrono::nanoseconds{3s}.count());
 	auto result =
@@ -178,9 +166,23 @@ auto App::wait_for_frame() -> vk::CommandBuffer {
 	if (result != vk::Result::eSuccess) {
 		throw std::runtime_error{"Failed to wait for Render Fence"};
 	}
+
+	m_render_target = m_swapchain->acquire_next_image(*render_sync.draw);
+	if (!m_render_target) {
+		// acquire failure => ErrorOutOfDate. Recreate Swapchain.
+		m_swapchain->recreate(m_framebuffer_size);
+		return false;
+	}
+
 	// reset fence _after_ acquisition of image: if it fails, the
 	// fence remains signaled.
 	m_device->resetFences(*render_sync.drawn);
+
+	return true;
+}
+
+auto App::begin_frame() -> vk::CommandBuffer {
+	auto const& render_sync = m_render_sync.at(m_frame_index);
 
 	auto command_buffer_bi = vk::CommandBufferBeginInfo{};
 	// this flag means recorded commands will not be reused.
@@ -193,15 +195,15 @@ void App::transition_for_render(vk::CommandBuffer const command_buffer) const {
 	auto dependency_info = vk::DependencyInfo{};
 	auto barrier = m_swapchain->base_barrier();
 	// Undefined => AttachmentOptimal
-	// we don't need to block any operations before the barrier, since we
-	// rely on the image acquired semaphore to block rendering.
-	// any color attachment operations must happen after the barrier.
+	// the barrier must wait for prior color attachment operations to complete,
+	// and block subsequent ones.
 	barrier.setOldLayout(vk::ImageLayout::eUndefined)
 		.setNewLayout(vk::ImageLayout::eAttachmentOptimal)
-		.setSrcAccessMask(vk::AccessFlagBits2::eNone)
-		.setSrcStageMask(vk::PipelineStageFlagBits2::eTopOfPipe)
-		.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite)
-		.setDstStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+		.setSrcAccessMask(vk::AccessFlagBits2::eColorAttachmentRead |
+						  vk::AccessFlagBits2::eColorAttachmentWrite)
+		.setSrcStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput)
+		.setDstAccessMask(barrier.srcAccessMask)
+		.setDstStageMask(barrier.srcStageMask);
 	dependency_info.setImageMemoryBarriers(barrier);
 	command_buffer.pipelineBarrier2(dependency_info);
 }
@@ -230,15 +232,15 @@ void App::transition_for_present(vk::CommandBuffer const command_buffer) const {
 	auto dependency_info = vk::DependencyInfo{};
 	auto barrier = m_swapchain->base_barrier();
 	// AttachmentOptimal => PresentSrc
-	// the barrier must wait for color attachment operations to complete.
-	// we don't need any post-synchronization as the present Sempahore takes
-	// care of that.
+	// the barrier must wait for prior color attachment operations to complete,
+	// and block subsequent ones.
 	barrier.setOldLayout(vk::ImageLayout::eAttachmentOptimal)
 		.setNewLayout(vk::ImageLayout::ePresentSrcKHR)
-		.setSrcAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite)
+		.setSrcAccessMask(vk::AccessFlagBits2::eColorAttachmentRead |
+						  vk::AccessFlagBits2::eColorAttachmentWrite)
 		.setSrcStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput)
-		.setDstAccessMask(vk::AccessFlagBits2::eNone)
-		.setDstStageMask(vk::PipelineStageFlagBits2::eBottomOfPipe);
+		.setDstAccessMask(barrier.srcAccessMask)
+		.setDstStageMask(barrier.srcStageMask);
 	dependency_info.setImageMemoryBarriers(barrier);
 	command_buffer.pipelineBarrier2(dependency_info);
 }
@@ -252,7 +254,7 @@ void App::submit_and_present() {
 		vk::CommandBufferSubmitInfo{render_sync.command_buffer};
 	auto wait_semaphore_info = vk::SemaphoreSubmitInfo{};
 	wait_semaphore_info.setSemaphore(*render_sync.draw)
-		.setStageMask(vk::PipelineStageFlagBits2::eTopOfPipe);
+		.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
 	auto signal_semaphore_info = vk::SemaphoreSubmitInfo{};
 	signal_semaphore_info.setSemaphore(*render_sync.present)
 		.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
@@ -264,7 +266,13 @@ void App::submit_and_present() {
 	m_frame_index = (m_frame_index + 1) % m_render_sync.size();
 	m_render_target.reset();
 
-	if (!m_swapchain->present(m_queue, *render_sync.present)) {
+	// an eErrorOutOfDateKHR result is not guaranteed if the
+	// framebuffer size does not match the Swapchain image size, check it
+	// explicitly.
+	auto const fb_size_changed = m_framebuffer_size != m_swapchain->get_size();
+	auto const out_of_date =
+		!m_swapchain->present(m_queue, *render_sync.present);
+	if (fb_size_changed || out_of_date) {
 		m_swapchain->recreate(m_framebuffer_size);
 	}
 }

@@ -34,7 +34,7 @@ class App {
 	void main_loop();
 
 	auto acquire_render_target() -> bool;
-	auto wait_for_frame() -> vk::CommandBuffer;
+	auto begin_frame() -> vk::CommandBuffer;
 	void transition_for_render(vk::CommandBuffer command_buffer) const;
 	void render(vk::CommandBuffer command_buffer);
 	void transition_for_present(vk::CommandBuffer command_buffer) const;
