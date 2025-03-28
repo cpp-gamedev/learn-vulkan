@@ -31,7 +31,9 @@ m_instance = vk::createInstanceUnique(instance_ci);
 // ...
 ```
 
-> This layer _is not_ part of standard Vulkan driver installs, you must package the layer with the application for it to run on environments without Vulkan SDK / Vulkan Configurator. Read more [here](https://docs.vulkan.org/samples/latest/samples/extensions/shader_object/README.html#_emulation_layer).
+<div class="warning">
+This layer <em>is not</em> part of standard Vulkan driver installs, you must package the layer with the application for it to run on environments without Vulkan SDK / Vulkan Configurator. Read more <a href="https://docs.vulkan.org/samples/latest/samples/extensions/shader_object/README.html#_emulation_layer">here</a>.
+</div>
 
 ## `class ShaderObject`
 

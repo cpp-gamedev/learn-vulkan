@@ -64,7 +64,7 @@ void App::draw(vk::CommandBuffer const command_buffer) const {
 
 ![White Triangle](./white_triangle.png)
 
-Updating our shaders to use interpolated RGB on each vertex:
+Updating the shaders to use interpolated RGB on each vertex:
 
 ```glsl
 // shader.vert
