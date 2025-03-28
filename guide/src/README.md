@@ -26,3 +26,8 @@ Some examples of what this guide _does not_ focus on:
 - GPU-driven rendering
 - Real-time graphics from ground-up
 - Considerations for tiled GPUs (eg mobile devices / Android)
+
+## Source
+
+The source code for the project (as well as this guide) is located in [this repository](https://github.com/cpp-gamedev/learn-vulkan). A `section/*` branch intends to reflect the state of the code at the end of a particular section of the guide. Bugfixes / changes are generally backported, but there may be some divergence from the current state of the code (ie, in `main`). The source of the guide itself is only up-to-date on `main`, changes are not backported.
+

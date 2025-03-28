@@ -2,7 +2,7 @@
 
 Vulkan is platform agnostic, which is one of the main reasons for its verbosity: it has to account for a wide range of implementations in its API. We shall be constraining our approach to Windows and Linux (x64 or aarch64), and focusing on discrete GPUs, enabing us to sidestep quite a bit of that verbosity. Vulkan 1.3 is widely supported by the target desktop platforms and reasonably recent graphics cards.
 
-> _This doesn't mean that eg an integrated graphics chip will not be supported, it will just not be particularly designed/optimized for._
+> This doesn't mean that eg an integrated graphics chip will not be supported, it will just not be particularly designed/optimized for.
 
 ## Technical Requirements
 
