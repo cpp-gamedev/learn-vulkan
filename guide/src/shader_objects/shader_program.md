@@ -77,6 +77,8 @@ struct ShaderProgramCreateInfo {
 };
 ```
 
+> Descriptor Sets and their Layouts will be covered later.
+
 Start with a skeleton definition:
 
 ```cpp
@@ -178,7 +180,8 @@ struct ShaderVertexInput {
 
 struct ShaderProgramCreateInfo {
   // ...
- ShaderVertexInput vertex_input{};
+  ShaderVertexInput vertex_input{};
+  // ...
 };
 
 class ShaderProgram {
