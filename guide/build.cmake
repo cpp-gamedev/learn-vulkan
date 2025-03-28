@@ -6,7 +6,7 @@ function(BuildBook LANGUAGE SOURCE_DIR TARGET_DIR)
     message(WARNING "Skipping '${LANGUAGE}' – SUMMARY.md not found at ${SOURCE_DIR}")
     return()
   endif()
-  
+
   if(NOT EXISTS "${SOURCE_DIR}/book.toml")
     message(WARNING "Skipping '${LANGUAGE}' – book.toml not found at ${SOURCE_DIR}")
     return()
@@ -16,10 +16,11 @@ function(BuildBook LANGUAGE SOURCE_DIR TARGET_DIR)
   execute_process(
     COMMAND mdbook build -d ${TARGET_DIR}
     WORKING_DIRECTORY ${SOURCE_DIR}
+    COMMAND_ERROR_IS_FATAL ANY
   )
 endfunction()
 
-# Copy the theme folder 
+# Copy the theme folder
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/theme" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/translations")
 
 BuildBook("en" "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/book")
