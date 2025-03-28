@@ -15,6 +15,26 @@ static constexpr auto extensions_v = std::array{
 };
 ```
 
+## Emulation Layer
+
+It's possible device creation now fails because the driver or physical device does not support `VK_EXT_shader_object` (especially likely with Intel). Vulkan SDK provides a layer that implements this extension: [`VK_LAYER_KHRONOS_shader_object`](https://github.com/KhronosGroup/Vulkan-ExtensionLayer/blob/main/docs/shader_object_layer.md). Adding this layer to the Instance Create Info should unblock usage of this feature:
+
+```cpp
+// ...
+// add the Shader Object emulation layer.
+static constexpr auto layers_v = std::array{
+  "VK_LAYER_KHRONOS_shader_object",
+};
+instance_ci.setPEnabledLayerNames(layers_v);
+
+m_instance = vk::createInstanceUnique(instance_ci);
+// ...
+```
+
+> This layer _is not_ part of standard Vulkan driver installs, you must package the layer with the application for it to run on environments without Vulkan SDK / Vulkan Configurator. Read more [here](https://docs.vulkan.org/samples/latest/samples/extensions/shader_object/README.html#_emulation_layer).
+
+## `class ShaderObject`
+
 We will encapsulate both vertex and fragment shaders into a single `ShaderProgram`, which will also bind the shaders before a draw, and expose/set various dynamic states.
 
 In `shader_program.hpp`, first add a `ShaderProgramCreateInfo` struct:

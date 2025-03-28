@@ -91,6 +91,12 @@ void App::create_instance() {
 	instance_ci.setPApplicationInfo(&app_info).setPEnabledExtensionNames(
 		extensions);
 
+	// add the Shader Object emulation layer.
+	static constexpr auto layers_v = std::array{
+		"VK_LAYER_KHRONOS_shader_object",
+	};
+	instance_ci.setPEnabledLayerNames(layers_v);
+
 	m_instance = vk::createInstanceUnique(instance_ci);
 	// initialize the dispatcher against the created Instance.
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_instance);
