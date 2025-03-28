@@ -6,5 +6,5 @@ title = "Learn Vulkan"
 
 [output.html]
 theme = "theme"
-additional-js = ["theme/lang-toggle.js"]
-additional-css = ["theme/lang-toggle.css"]
+additional-js = ["theme/lang_toggle.js"]
+additional-css = ["theme/lang_toggle.css"]
