@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 
 class App {
   public:
-	void run(std::string_view assets_dir);
+	void run();
 
   private:
 	struct RenderSync {

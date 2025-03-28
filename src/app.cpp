@@ -11,11 +11,7 @@ namespace lvk {
 using namespace std::chrono_literals;
 
 namespace {
-[[nodiscard]] auto locate_assets_dir(std::string_view const in) -> fs::path {
-	if (!in.empty()) {
-		std::println("[lvk] Using custom assets directory: '{}'", in);
-		return in;
-	}
+[[nodiscard]] auto locate_assets_dir() -> fs::path {
 	// look for '<path>/assets/', starting from the working
 	// directory and walking up the parent directory tree.
 	static constexpr std::string_view dir_name_v{"assets"};
@@ -54,8 +50,8 @@ namespace {
 }
 } // namespace
 
-void App::run(std::string_view const assets_dir) {
-	m_assets_dir = locate_assets_dir(assets_dir);
+void App::run() {
+	m_assets_dir = locate_assets_dir();
 
 	create_window();
 	create_instance();

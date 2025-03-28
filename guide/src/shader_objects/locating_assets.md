@@ -47,37 +47,3 @@ Add a helper function to locate the assets dir, and assign `m_assets_dir` to its
 // ...
 m_assets_dir = locate_assets_dir();
 ```
-
-We can also support a command line argument to override this algorithm:
-
-```cpp
-// app.hpp
-void run(std::string_view assets_dir);
-
-// app.cpp
-[[nodiscard]] auto locate_assets_dir(std::string_view const in) -> fs::path {
-  if (!in.empty()) {
-    std::println("[lvk] Using custom assets directory: '{}'", in);
-    return in;
-  }
-  // ...
-}
-
-// ...
-void App::run(std::string_view const assets_dir) {
-  m_assets_dir = locate_assets_dir(assets_dir);
-  // ...
-}
-
-// main.cpp
-auto assets_dir = std::string_view{};
-
-// ...
-if (arg == "-x" || arg == "--force-x11") {
-  glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
-}
-if (arg == "-a" || arg == "--assets") { assets_dir = arg; }
-
-// ...
-lvk::App{}.run(assets_dir);
-```
