@@ -14,7 +14,8 @@ struct ShaderProgramCreateInfo {
 	vk::Device device;
 	std::span<std::uint32_t const> vertex_spirv;
 	std::span<std::uint32_t const> fragment_spirv;
-	ShaderVertexInput vertex_input{};
+	ShaderVertexInput vertex_input;
+	std::span<vk::DescriptorSetLayout const> set_layouts;
 };
 
 class ShaderProgram {

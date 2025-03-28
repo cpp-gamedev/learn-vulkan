@@ -10,12 +10,13 @@ constexpr auto to_vkbool(bool const value) {
 
 ShaderProgram::ShaderProgram(CreateInfo const& create_info)
 	: m_vertex_input(create_info.vertex_input) {
-	static auto const create_shader_ci =
-		[](std::span<std::uint32_t const> spirv) {
+	auto const create_shader_ci =
+		[&create_info](std::span<std::uint32_t const> spirv) {
 			auto ret = vk::ShaderCreateInfoEXT{};
 			ret.setCodeSize(spirv.size_bytes())
 				.setPCode(spirv.data())
 				// set common parameters.
+				.setSetLayouts(create_info.set_layouts)
 				.setCodeType(vk::ShaderCodeTypeEXT::eSpirv)
 				.setPName("main");
 			return ret;

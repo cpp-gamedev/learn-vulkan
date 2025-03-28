@@ -219,6 +219,8 @@ void App::create_shader() {
 		.device = *m_device,
 		.vertex_spirv = vertex_spirv,
 		.fragment_spirv = fragment_spirv,
+		.vertex_input = {},
+		.set_layouts = {},
 	};
 	m_shader.emplace(shader_ci);
 }

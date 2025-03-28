@@ -46,6 +46,7 @@ struct ShaderProgramCreateInfo {
   vk::Device device;
   std::span<std::uint32_t const> vertex_spirv;
   std::span<std::uint32_t const> fragment_spirv;
+  std::span<vk::DescriptorSetLayout const> set_layouts;
 };
 ```
 
@@ -69,12 +70,13 @@ The definition of the constructor is fairly straightforward:
 
 ```cpp
 ShaderProgram::ShaderProgram(CreateInfo const& create_info) {
-  static auto const create_shader_ci =
-    [](std::span<std::uint32_t const> spirv) {
+  auto const create_shader_ci =
+    [&create_info](std::span<std::uint32_t const> spirv) {
       auto ret = vk::ShaderCreateInfoEXT{};
       ret.setCodeSize(spirv.size_bytes())
         .setPCode(spirv.data())
         // set common parameters.
+        .setSetLayouts(create_info.set_layouts)
         .setCodeType(vk::ShaderCodeTypeEXT::eSpirv)
         .setPName("main");
       return ret;
