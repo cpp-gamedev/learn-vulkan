@@ -1,6 +1,10 @@
 [book]
 authors = ["Karn Kaul"]
 language = "en"
-multilingual = false
 src = "src"
 title = "Learn Vulkan"
+
+[output.html]
+theme = "theme"
+additional-js = ["theme/lang-toggle.js"]
+additional-css = ["theme/lang-toggle.css"]
