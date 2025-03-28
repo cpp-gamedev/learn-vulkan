@@ -35,6 +35,33 @@ m_instance = vk::createInstanceUnique(instance_ci);
 This layer <em>is not</em> part of standard Vulkan driver installs, you must package the layer with the application for it to run on environments without Vulkan SDK / Vulkan Configurator. Read more <a href="https://docs.vulkan.org/samples/latest/samples/extensions/shader_object/README.html#_emulation_layer">here</a>.
 </div>
 
+Since desired layers may not be available, we can set up a defensive check:
+
+```cpp
+[[nodiscard]] auto get_layers(std::span<char const* const> desired)
+  -> std::vector<char const*> {
+  auto ret = std::vector<char const*>{};
+  ret.reserve(desired.size());
+  auto const available = vk::enumerateInstanceLayerProperties();
+  for (char const* layer : desired) {
+    auto const pred = [layer = std::string_view{layer}](
+                vk::LayerProperties const& properties) {
+      return properties.layerName == layer;
+    };
+    if (std::ranges::find_if(available, pred) == available.end()) {
+      std::println("[lvk] [WARNING] Vulkan Layer '{}' not found", layer);
+      continue;
+    }
+    ret.push_back(layer);
+  }
+  return ret;
+}
+
+// ...
+auto const layers = get_layers(layers_v);
+instance_ci.setPEnabledLayerNames(layers);
+```
+
 ## `class ShaderObject`
 
 We will encapsulate both vertex and fragment shaders into a single `ShaderProgram`, which will also bind the shaders before a draw, and expose/set various dynamic states.

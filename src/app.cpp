@@ -24,6 +24,25 @@ namespace {
 	return fs::current_path();
 }
 
+[[nodiscard]] auto get_layers(std::span<char const* const> desired)
+	-> std::vector<char const*> {
+	auto ret = std::vector<char const*>{};
+	ret.reserve(desired.size());
+	auto const available = vk::enumerateInstanceLayerProperties();
+	for (char const* layer : desired) {
+		auto const pred = [layer = std::string_view{layer}](
+							  vk::LayerProperties const& properties) {
+			return properties.layerName == layer;
+		};
+		if (std::ranges::find_if(available, pred) == available.end()) {
+			std::println("[lvk] [WARNING] Vulkan Layer '{}' not found", layer);
+			continue;
+		}
+		ret.push_back(layer);
+	}
+	return ret;
+}
+
 [[nodiscard]] auto to_spir_v(fs::path const& path)
 	-> std::vector<std::uint32_t> {
 	// open the file at the end, to get the total size.
@@ -91,7 +110,8 @@ void App::create_instance() {
 	static constexpr auto layers_v = std::array{
 		"VK_LAYER_KHRONOS_shader_object",
 	};
-	instance_ci.setPEnabledLayerNames(layers_v);
+	auto const layers = get_layers(layers_v);
+	instance_ci.setPEnabledLayerNames(layers);
 
 	m_instance = vk::createInstanceUnique(instance_ci);
 	// initialize the dispatcher against the created Instance.
