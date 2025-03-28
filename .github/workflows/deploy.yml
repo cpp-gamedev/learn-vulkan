@@ -24,7 +24,7 @@ jobs:
       - name: build book
         run: |
           cd guide
-          cmake -P build.cmake
+          cmake -P build.cmake || exit 1
           ls book
       - name: setup pages
         uses: actions/configure-pages@v4
