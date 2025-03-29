@@ -67,6 +67,9 @@ target_link_libraries(vma PUBLIC
   Vulkan::Headers
   GPUOpen::VulkanMemoryAllocator
 )
+target_include_directories(vma SYSTEM PUBLIC
+  src/VulkanMemoryAllocator/include
+)
 target_compile_definitions(vma PUBLIC
   VMA_STATIC_VULKAN_FUNCTIONS=0
   VMA_DYNAMIC_VULKAN_FUNCTIONS=1
