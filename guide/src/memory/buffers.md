@@ -4,14 +4,17 @@ First add the RAII wrapper components for VMA buffers:
 
 ```cpp
 struct RawBuffer {
+  [[nodiscard]] auto mapped_span() const -> std::span<std::byte> {
+    return std::span{static_cast<std::byte*>(mapped), size};
+  }
+
+  auto operator==(RawBuffer const& rhs) const -> bool = default;
+
   VmaAllocator allocator{};
   VmaAllocation allocation{};
   vk::Buffer buffer{};
-  vk::DeviceSize capacity{};
   vk::DeviceSize size{};
   void* mapped{};
-
-  auto operator==(RawBuffer const& rhs) const -> bool = default;
 };
 
 struct BufferDeleter {
@@ -25,82 +28,30 @@ void BufferDeleter::operator()(RawBuffer const& raw_buffer) const noexcept {
 }
 ```
 
-Buffers can be backed by host (RAM) or device (VRAM) memory: the former is mappable and thus useful for data that changes every frame, latter is faster to access for the GPU but needs more complex methods to copy data from the CPU to it. Add the relevant subset of parameters and the RAII wrapper:
+Buffers can be backed by host (RAM) or device (VRAM) memory: the former is mappable and thus useful for data that changes every frame, latter is faster to access for the GPU but needs more complex methods to copy data from the CPU to it. Leaving device buffers for later, add the `Buffer` alias and a create function:
 
 ```cpp
-enum class BufferType : std::int8_t { Host, Device };
+using Buffer = Scoped<RawBuffer, BufferDeleter>;
 
-struct BufferCreateInfo {
-  vk::BufferUsageFlags usage{};
-  vk::DeviceSize size{};
-  BufferType type{BufferType::Host};
-};
-
-class Buffer {
- public:
-  using CreateInfo = BufferCreateInfo;
-
-  explicit Buffer(VmaAllocator allocator, CreateInfo const& create_info);
-
-  [[nodiscard]] auto get_type() const -> Type {
-    return m_buffer.get().mapped == nullptr ? Type::Device : Type::Host;
-  }
-
-  [[nodiscard]] auto get_usage() const -> vk::BufferUsageFlags {
-    return m_usage;
-  }
-
-  [[nodiscard]] auto get_raw() const -> RawBuffer const& {
-    return m_buffer.get();
-  }
-
-  auto resize(vk::DeviceSize size) -> bool;
-
- private:
-  auto create(VmaAllocator allocator, vk::DeviceSize size) -> bool;
-
-  Scoped<RawBuffer, BufferDeleter> m_buffer{};
-  vk::BufferUsageFlags m_usage{};
-};
+[[nodiscard]] auto create_host_buffer(VmaAllocator allocator,
+                                      vk::BufferUsageFlags usage,
+                                      vk::DeviceSize size) -> Buffer;
 ```
 
-`resize()` and `create()` are separate because the former uses the existing `m_buffer`'s allocator. The implementation:
+Add a helper function that can be reused for device buffers too later:
 
 ```cpp
-[[nodiscard]] constexpr auto positive_size(vk::DeviceSize const in) {
-  return in > 0 ? in : 1;
-}
-
-// ...
-Buffer::Buffer(VmaAllocator allocator, CreateInfo const& create_info)
-  : m_usage(create_info.usage) {
-  create(allocator, create_info.type, create_info.size);
-}
-
-auto Buffer::resize(vk::DeviceSize const size) -> bool {
-  if (size <= m_buffer.get().capacity) {
-    m_buffer.get().size = size;
-    return true;
-  }
-  return create(m_buffer.get().allocator, get_type(), size);
-}
-
-auto Buffer::create(VmaAllocator allocator, Type const type,
-          vk::DeviceSize size) -> bool {
-  // buffers cannot be zero sized.
-  size = positive_size(size);
-  auto allocation_ci = VmaAllocationCreateInfo{};
-  allocation_ci.flags =
-    VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-  if (type == BufferType::Device) {
-    allocation_ci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-  } else {
-    allocation_ci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-    allocation_ci.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+[[nodiscard]] auto create_buffer(VmaAllocator allocator,
+                                 VmaAllocationCreateInfo const& allocation_ci,
+                                 vk::BufferUsageFlags const usage,
+                                 vk::DeviceSize const size) -> Buffer {
+  if (size == 0) {
+    std::println(stderr, "Buffer cannot be 0-sized");
+    return {};
   }
 
   auto buffer_ci = vk::BufferCreateInfo{};
-  buffer_ci.setSize(size).setUsage(m_usage);
+  buffer_ci.setSize(size).setUsage(usage);
   auto vma_buffer_ci = static_cast<VkBufferCreateInfo>(buffer_ci);
 
   VmaAllocation allocation{};
@@ -111,17 +62,30 @@ auto Buffer::create(VmaAllocator allocator, Type const type,
             &allocation, &allocation_info);
   if (result != VK_SUCCESS) {
     std::println(stderr, "Failed to create VMA Buffer");
-    return false;
+    return {};
   }
 
-  m_buffer = RawBuffer{
+  return RawBuffer{
     .allocator = allocator,
     .allocation = allocation,
     .buffer = buffer,
-    .capacity = size,
     .size = size,
     .mapped = allocation_info.pMappedData,
   };
-  return true;
+}
+```
+
+Implement `create_host_buffer()`:
+
+```cpp
+auto vma::create_host_buffer(VmaAllocator allocator,
+                             vk::BufferUsageFlags const usage,
+                             vk::DeviceSize const size) -> Buffer {
+  auto allocation_ci = VmaAllocationCreateInfo{};
+  allocation_ci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+  allocation_ci.flags =
+    VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+    VMA_ALLOCATION_CREATE_MAPPED_BIT;
+  return create_buffer(allocator, allocation_ci, usage, size);
 }
 ```

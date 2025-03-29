@@ -12,28 +12,6 @@ namespace lvk {
 using namespace std::chrono_literals;
 
 namespace {
-// two vertex attributes: position at 0, color at 1.
-constexpr auto vertex_attributes_v = std::array{
-	// the format matches the type and layout of data: vec2 => 2x 32-bit floats.
-	vk::VertexInputAttributeDescription2EXT{0, 0, vk::Format::eR32G32Sfloat,
-											offsetof(Vertex, position)},
-	// vec3 => 3x 32-bit floats
-	vk::VertexInputAttributeDescription2EXT{1, 0, vk::Format::eR32G32B32Sfloat,
-											offsetof(Vertex, color)},
-};
-
-// one vertex binding at location 0.
-constexpr auto vertex_bindings_v = std::array{
-	// we are using interleaved data with a stride of sizeof(Vertex).
-	vk::VertexInputBindingDescription2EXT{0, sizeof(Vertex),
-										  vk::VertexInputRate::eVertex, 1},
-};
-
-constexpr auto vertex_input_v = ShaderVertexInput{
-	.attributes = vertex_attributes_v,
-	.bindings = vertex_bindings_v,
-};
-
 [[nodiscard]] auto locate_assets_dir() -> fs::path {
 	// look for '<path>/assets/', starting from the working
 	// directory and walking up the parent directory tree.
@@ -262,6 +240,10 @@ void App::create_shader() {
 	auto const vertex_spirv = to_spir_v(asset_path("shader.vert"));
 	auto const fragment_spirv = to_spir_v(asset_path("shader.frag"));
 
+	static constexpr auto vertex_input_v = ShaderVertexInput{
+		.attributes = vertex_attributes_v,
+		.bindings = vertex_bindings_v,
+	};
 	auto const shader_ci = ShaderProgram::CreateInfo{
 		.device = *m_device,
 		.vertex_spirv = vertex_spirv,
@@ -273,35 +255,19 @@ void App::create_shader() {
 }
 
 void App::create_vertex_buffer() {
-	// we want to write 4x Vertex objects to a Host VertexBuffer.
-	auto buffer_ci = vma::Buffer::CreateInfo{
-		.usage = vk::BufferUsageFlagBits::eVertexBuffer,
-		.size = 4 * sizeof(Vertex),
-		.type = vma::BufferType::Host,
-	};
-	m_vbo.emplace(m_allocator.get(), buffer_ci);
-
-	// vertices that form a quad.
+	// vertices previously hard-coded in the vertex shader.
 	static constexpr auto vertices_v = std::array{
 		Vertex{.position = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
 		Vertex{.position = {0.5f, -0.5f}, .color = {0.0f, 1.0f, 0.0f}},
-		Vertex{.position = {0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}},
-		Vertex{.position = {-0.5f, 0.5f}, .color = {1.0f, 1.0f, 0.0f}},
+		Vertex{.position = {0.0f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}},
 	};
-	// host buffers have a memory-mapped pointer available to memcpy data to.
-	std::memcpy(m_vbo->get_raw().mapped, vertices_v.data(), sizeof(vertices_v));
+	// we want to write vertices_v to a Host VertexBuffer.
+	m_vbo = vma::create_host_buffer(m_allocator.get(),
+									vk::BufferUsageFlagBits::eVertexBuffer,
+									sizeof(vertices_v));
 
-	// prepare to write 6x u32 indices to a Host IndexBuffer.
-	buffer_ci = {
-		.usage = vk::BufferUsageFlagBits::eIndexBuffer,
-		.size = 6 * sizeof(std::uint32_t),
-		.type = vma::BufferType::Host,
-	};
-	m_ibo.emplace(m_allocator.get(), buffer_ci);
-	static constexpr auto indices_v = std::array{
-		0u, 1u, 2u, 2u, 3u, 0u,
-	};
-	std::memcpy(m_ibo->get_raw().mapped, indices_v.data(), sizeof(indices_v));
+	// host buffers have a memory-mapped pointer available to memcpy data to.
+	std::memcpy(m_vbo.get().mapped, vertices_v.data(), sizeof(vertices_v));
 }
 
 auto App::asset_path(std::string_view const uri) const -> fs::path {
@@ -483,12 +449,8 @@ void App::inspect() {
 void App::draw(vk::CommandBuffer const command_buffer) const {
 	m_shader->bind(command_buffer, m_framebuffer_size);
 	// single VBO at binding 0 at no offset.
-	command_buffer.bindVertexBuffers(0, m_vbo->get_raw().buffer,
-									 vk::DeviceSize{});
-	// IBO with u32 indices at no offset.
-	command_buffer.bindIndexBuffer(m_ibo->get_raw().buffer, 0,
-								   vk::IndexType::eUint32);
-	// m_ibo has 6 indices.
-	command_buffer.drawIndexed(6, 1, 0, 0, 0);
+	command_buffer.bindVertexBuffers(0, m_vbo.get().buffer, vk::DeviceSize{});
+	// m_vbo has 3 vertices.
+	command_buffer.draw(3, 1, 0, 0);
 }
 } // namespace lvk

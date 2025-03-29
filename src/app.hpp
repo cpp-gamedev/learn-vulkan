@@ -79,8 +79,7 @@ class App {
 
 	std::optional<ShaderProgram> m_shader{};
 
-	std::optional<vma::Buffer> m_vbo{};
-	std::optional<vma::Buffer> m_ibo{};
+	vma::Buffer m_vbo{};
 
 	glm::ivec2 m_framebuffer_size{};
 	std::optional<RenderTarget> m_render_target{};
