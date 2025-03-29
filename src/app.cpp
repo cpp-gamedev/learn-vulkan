@@ -77,6 +77,7 @@ void App::run() {
 	create_surface();
 	select_gpu();
 	create_device();
+	create_allocator();
 	create_swapchain();
 	create_render_sync();
 	create_imgui();

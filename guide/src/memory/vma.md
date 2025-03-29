@@ -26,10 +26,11 @@ using Allocator = Scoped<VmaAllocator, Deleter>;
 } // namespace lvk::vma
 
 // vma.cpp
-void vma::Deleter::operator()(VmaAllocator allocator) const noexcept {
+void Deleter::operator()(VmaAllocator allocator) const noexcept {
   vmaDestroyAllocator(allocator);
 }
 
+// ...
 auto vma::create_allocator(vk::Instance const instance,
                            vk::PhysicalDevice const physical_device,
                            vk::Device const device) -> Allocator {

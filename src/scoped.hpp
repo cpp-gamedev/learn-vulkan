@@ -4,8 +4,7 @@
 
 namespace lvk {
 template <typename Type>
-concept Scopeable =
-	std::equality_comparable<Type> && std::is_default_constructible_v<Type>;
+concept Scopeable = std::equality_comparable<Type>;
 
 template <Scopeable Type, typename Deleter>
 class Scoped {
