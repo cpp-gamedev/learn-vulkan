@@ -5,6 +5,7 @@
 #include <scoped_waiter.hpp>
 #include <shader_program.hpp>
 #include <swapchain.hpp>
+#include <vma.hpp>
 #include <window.hpp>
 #include <filesystem>
 
@@ -35,6 +36,7 @@ class App {
 	void create_swapchain();
 	void create_render_sync();
 	void create_imgui();
+	void create_allocator();
 	void create_shader();
 
 	[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
@@ -61,7 +63,8 @@ class App {
 	vk::UniqueSurfaceKHR m_surface{};
 	Gpu m_gpu{}; // not an RAII member.
 	vk::UniqueDevice m_device{};
-	vk::Queue m_queue{}; // not an RAII member.
+	vk::Queue m_queue{};		  // not an RAII member.
+	vma::Allocator m_allocator{}; // anywhere between m_device and m_shader.
 
 	std::optional<Swapchain> m_swapchain{};
 	// command pool for all render Command Buffers.

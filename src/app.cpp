@@ -228,6 +228,10 @@ void App::create_imgui() {
 	m_imgui.emplace(imgui_ci);
 }
 
+void App::create_allocator() {
+	m_allocator = vma::create_allocator(*m_instance, m_gpu.device, *m_device);
+}
+
 void App::create_shader() {
 	auto const vertex_spirv = to_spir_v(asset_path("shader.vert"));
 	auto const fragment_spirv = to_spir_v(asset_path("shader.frag"));
