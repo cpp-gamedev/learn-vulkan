@@ -38,6 +38,7 @@ class App {
 	void create_imgui();
 	void create_allocator();
 	void create_shader();
+	void create_vertex_buffer();
 
 	[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
 
@@ -77,6 +78,9 @@ class App {
 	std::optional<DearImGui> m_imgui{};
 
 	std::optional<ShaderProgram> m_shader{};
+
+	std::optional<vma::Buffer> m_vbo{};
+	std::optional<vma::Buffer> m_ibo{};
 
 	glm::ivec2 m_framebuffer_size{};
 	std::optional<RenderTarget> m_render_target{};
