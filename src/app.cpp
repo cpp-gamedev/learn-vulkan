@@ -290,10 +290,14 @@ void App::create_vertex_buffer() {
 			indices_bytes_v,
 		};
 	// we want to write total_bytes_v to a Device VertexBuffer | IndexBuffer.
-	m_vbo = vma::create_device_buffer(m_allocator.get(),
-									  vk::BufferUsageFlagBits::eVertexBuffer |
-										  vk::BufferUsageFlagBits::eIndexBuffer,
-									  create_command_block(), total_bytes_v);
+	auto const buffer_ci = vma::BufferCreateInfo{
+		.allocator = m_allocator.get(),
+		.usage = vk::BufferUsageFlagBits::eVertexBuffer |
+				 vk::BufferUsageFlagBits::eIndexBuffer,
+		.queue_family = m_gpu.queue_family,
+	};
+	m_vbo = vma::create_device_buffer(buffer_ci, create_command_block(),
+									  total_bytes_v);
 }
 
 auto App::asset_path(std::string_view const uri) const -> fs::path {

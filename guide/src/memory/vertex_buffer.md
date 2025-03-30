@@ -68,20 +68,22 @@ Add a VBO (Vertex Buffer Object) member and create it:
 
 ```cpp
 void App::create_vertex_buffer() {
-  // we want to write 4x Vertex objects to a Host VertexBuffer.
-  auto const buffer_ci = vma::BufferCreateInfo{
-    .usage = vk::BufferUsageFlagBits::eVertexBuffer,
-    .size = 4 * sizeof(Vertex),
-    .type = vma::BufferType::Host,
-  };
-  m_vbo = vma::create_buffer(m_allocator.get(), buffer_ci);
-
   // vertices moved from the shader.
   static constexpr auto vertices_v = std::array{
     Vertex{.position = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
     Vertex{.position = {0.5f, -0.5f}, .color = {0.0f, 1.0f, 0.0f}},
     Vertex{.position = {0.0f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}},
   };
+
+  // we want to write vertices_v to a Host VertexBuffer.
+  auto const buffer_ci = vma::BufferCreateInfo{
+    .allocator = m_allocator.get(),
+    .usage = vk::BufferUsageFlagBits::eVertexBuffer,
+    .queue_family = m_gpu.queue_family,
+  };
+  m_vbo = vma::create_buffer(buffer_ci, vma::BufferMemoryType::Host,
+                             sizeof(vertices_v));
+
   // host buffers have a memory-mapped pointer available to memcpy data to.
   std::memcpy(m_vbo.get().mapped, vertices_v.data(), sizeof(vertices_v));
 }

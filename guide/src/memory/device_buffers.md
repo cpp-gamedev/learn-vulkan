@@ -7,8 +7,7 @@ This guide will only use device buffers for vertex buffers, where both vertex an
 using ByteSpans = std::span<std::span<std::byte const> const>;
 
 // returns a Device Buffer with each byte span sequentially written.
-[[nodiscard]] auto create_device_buffer(VmaAllocator allocator,
-                                        vk::BufferUsageFlags usage,
+[[nodiscard]] auto create_device_buffer(BufferCreateInfo const& create_info,
                                         CommandBlock command_block,
                                         ByteSpans const& byte_spans) -> Buffer;
 ```
@@ -16,8 +15,7 @@ using ByteSpans = std::span<std::span<std::byte const> const>;
 Implement `create_device_buffer()`:
 
 ```cpp
-auto vma::create_device_buffer(VmaAllocator allocator,
-                               vk::BufferUsageFlags usage,
+auto vma::create_device_buffer(BufferCreateInfo const& create_info,
                                CommandBlock command_block,
                                ByteSpans const& byte_spans) -> Buffer {
   auto const total_size = std::accumulate(
@@ -26,18 +24,14 @@ auto vma::create_device_buffer(VmaAllocator allocator,
       return n + bytes.size();
     });
 
+  auto staging_ci = create_info;
+  staging_ci.usage = vk::BufferUsageFlagBits::eTransferSrc;
+
   // create staging Host Buffer with TransferSrc usage.
-  auto staging_buffer = create_host_buffer(
-    allocator, vk::BufferUsageFlagBits::eTransferSrc, total_size);
-
+  auto staging_buffer =
+    create_buffer(create_info, BufferMemoryType::Host, total_size);
   // create the Device Buffer, ensuring TransferDst usage.
-  usage |= vk::BufferUsageFlagBits::eTransferDst;
-  auto allocation_ci = VmaAllocationCreateInfo{};
-  allocation_ci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-  allocation_ci.flags =
-    VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-  auto ret = create_buffer(allocator, allocation_ci, usage, total_size);
-
+  auto ret = create_buffer(create_info, BufferMemoryType::Device, total_size);
   // can't do anything if either buffer creation failed.
   if (!staging_buffer.get().buffer || !ret.get().buffer) { return {}; }
 

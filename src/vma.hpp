@@ -35,16 +35,51 @@ struct BufferDeleter {
 
 using Buffer = Scoped<RawBuffer, BufferDeleter>;
 
-[[nodiscard]] auto create_host_buffer(VmaAllocator allocator,
-									  vk::BufferUsageFlags usage,
-									  vk::DeviceSize size) -> Buffer;
+struct BufferCreateInfo {
+	VmaAllocator allocator;
+	vk::BufferUsageFlags usage;
+	std::uint32_t queue_family;
+};
+
+enum class BufferMemoryType : std::int8_t { Host, Device };
+
+[[nodiscard]] auto create_buffer(BufferCreateInfo const& create_info,
+								 BufferMemoryType memory_type,
+								 vk::DeviceSize size) -> Buffer;
 
 // disparate byte spans.
 using ByteSpans = std::span<std::span<std::byte const> const>;
 
 // returns a Device Buffer with each byte span sequentially written.
-[[nodiscard]] auto create_device_buffer(VmaAllocator allocator,
-										vk::BufferUsageFlags usage,
+[[nodiscard]] auto create_device_buffer(BufferCreateInfo const& create_info,
 										CommandBlock command_block,
 										ByteSpans const& byte_spans) -> Buffer;
+
+struct RawImage {
+	auto operator==(RawImage const& rhs) const -> bool = default;
+
+	VmaAllocator allocator{};
+	VmaAllocation allocation{};
+	vk::Image image{};
+	vk::Extent2D extent{};
+	vk::Format format{};
+	std::uint32_t levels{};
+};
+
+struct ImageDeleter {
+	void operator()(RawImage const& raw_image) const noexcept;
+};
+
+using Image = Scoped<RawImage, ImageDeleter>;
+
+struct ImageCreateInfo {
+	std::uint32_t queue_family;
+	vk::ImageUsageFlags usage;
+	vk::Format format;
+	vk::Extent2D extent;
+	std::uint32_t levels;
+};
+
+[[nodiscard]] auto create_image(VmaAllocator allocator,
+								ImageCreateInfo const& create_info) -> Image;
 } // namespace lvk::vma

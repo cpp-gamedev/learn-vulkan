@@ -5,41 +5,6 @@
 
 namespace lvk {
 namespace vma {
-namespace {
-[[nodiscard]] auto create_buffer(VmaAllocator allocator,
-								 VmaAllocationCreateInfo const& allocation_ci,
-								 vk::BufferUsageFlags const usage,
-								 vk::DeviceSize const size) -> Buffer {
-	if (size == 0) {
-		std::println(stderr, "Buffer cannot be 0-sized");
-		return {};
-	}
-
-	auto buffer_ci = vk::BufferCreateInfo{};
-	buffer_ci.setSize(size).setUsage(usage);
-	auto vma_buffer_ci = static_cast<VkBufferCreateInfo>(buffer_ci);
-
-	VmaAllocation allocation{};
-	VkBuffer buffer{};
-	auto allocation_info = VmaAllocationInfo{};
-	auto const result =
-		vmaCreateBuffer(allocator, &vma_buffer_ci, &allocation_ci, &buffer,
-						&allocation, &allocation_info);
-	if (result != VK_SUCCESS) {
-		std::println(stderr, "Failed to create VMA Buffer");
-		return {};
-	}
-
-	return RawBuffer{
-		.allocator = allocator,
-		.allocation = allocation,
-		.buffer = buffer,
-		.size = size,
-		.mapped = allocation_info.pMappedData,
-	};
-}
-} // namespace
-
 void Deleter::operator()(VmaAllocator allocator) const noexcept {
 	vmaDestroyAllocator(allocator);
 }
@@ -71,19 +36,55 @@ auto vma::create_allocator(vk::Instance const instance,
 	throw std::runtime_error{"Failed to create Vulkan Memory Allocator"};
 }
 
-auto vma::create_host_buffer(VmaAllocator allocator,
-							 vk::BufferUsageFlags const usage,
-							 vk::DeviceSize const size) -> Buffer {
+auto vma::create_buffer(BufferCreateInfo const& create_info,
+						BufferMemoryType const memory_type,
+						vk::DeviceSize const size) -> Buffer {
+	if (size == 0) {
+		std::println(stderr, "Buffer cannot be 0-sized");
+		return {};
+	}
+
 	auto allocation_ci = VmaAllocationCreateInfo{};
-	allocation_ci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
 	allocation_ci.flags =
-		VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-		VMA_ALLOCATION_CREATE_MAPPED_BIT;
-	return create_buffer(allocator, allocation_ci, usage, size);
+		VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+	auto usage = create_info.usage;
+	if (memory_type == BufferMemoryType::Device) {
+		allocation_ci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+		// device buffers need to support TransferDst.
+		usage |= vk::BufferUsageFlagBits::eTransferDst;
+	} else {
+		allocation_ci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+		// host buffers can provide mapped memory.
+		allocation_ci.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	}
+
+	auto buffer_ci = vk::BufferCreateInfo{};
+	buffer_ci.setQueueFamilyIndices(create_info.queue_family)
+		.setSize(size)
+		.setUsage(usage);
+	auto vma_buffer_ci = static_cast<VkBufferCreateInfo>(buffer_ci);
+
+	VmaAllocation allocation{};
+	VkBuffer buffer{};
+	auto allocation_info = VmaAllocationInfo{};
+	auto const result =
+		vmaCreateBuffer(create_info.allocator, &vma_buffer_ci, &allocation_ci,
+						&buffer, &allocation, &allocation_info);
+	if (result != VK_SUCCESS) {
+		std::println(stderr, "Failed to create VMA Buffer");
+		return {};
+	}
+
+	return RawBuffer{
+		.allocator = create_info.allocator,
+		.allocation = allocation,
+		.buffer = buffer,
+		.size = size,
+		.mapped = allocation_info.pMappedData,
+	};
 }
 
-auto vma::create_device_buffer(VmaAllocator allocator,
-							   vk::BufferUsageFlags usage,
+auto vma::create_device_buffer(BufferCreateInfo const& create_info,
 							   CommandBlock command_block,
 							   ByteSpans const& byte_spans) -> Buffer {
 	auto const total_size = std::accumulate(
@@ -92,18 +93,14 @@ auto vma::create_device_buffer(VmaAllocator allocator,
 			return n + bytes.size();
 		});
 
+	auto staging_ci = create_info;
+	staging_ci.usage = vk::BufferUsageFlagBits::eTransferSrc;
+
 	// create staging Host Buffer with TransferSrc usage.
-	auto staging_buffer = create_host_buffer(
-		allocator, vk::BufferUsageFlagBits::eTransferSrc, total_size);
-
+	auto staging_buffer =
+		create_buffer(create_info, BufferMemoryType::Host, total_size);
 	// create the Device Buffer, ensuring TransferDst usage.
-	usage |= vk::BufferUsageFlagBits::eTransferDst;
-	auto allocation_ci = VmaAllocationCreateInfo{};
-	allocation_ci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-	allocation_ci.flags =
-		VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-	auto ret = create_buffer(allocator, allocation_ci, usage, total_size);
-
+	auto ret = create_buffer(create_info, BufferMemoryType::Device, total_size);
 	// can't do anything if either buffer creation failed.
 	if (!staging_buffer.get().buffer || !ret.get().buffer) { return {}; }
 
@@ -131,5 +128,45 @@ auto vma::create_device_buffer(VmaAllocator allocator,
 	command_block.submit_and_wait();
 
 	return ret;
+}
+
+auto vma::create_image(VmaAllocator allocator,
+					   ImageCreateInfo const& create_info) -> Image {
+	if (create_info.extent.width == 0 || create_info.extent.height == 0) {
+		std::println(stderr, "Images cannot have 0 width or height");
+		return {};
+	}
+	auto image_ci = vk::ImageCreateInfo{};
+	image_ci.setImageType(vk::ImageType::e2D)
+		.setExtent({create_info.extent.width, create_info.extent.height, 1})
+		.setFormat(create_info.format)
+		.setUsage(create_info.usage)
+		.setArrayLayers(1)
+		.setMipLevels(create_info.levels)
+		.setSamples(vk::SampleCountFlagBits::e1)
+		.setTiling(vk::ImageTiling::eOptimal)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
+		.setQueueFamilyIndices(create_info.queue_family);
+	auto const vk_image_ci = static_cast<VkImageCreateInfo>(image_ci);
+
+	auto allocation_ci = VmaAllocationCreateInfo{};
+	allocation_ci.usage = VMA_MEMORY_USAGE_AUTO;
+	VkImage image{};
+	VmaAllocation allocation{};
+	auto const result = vmaCreateImage(allocator, &vk_image_ci, &allocation_ci,
+									   &image, &allocation, {});
+	if (result != VK_SUCCESS) {
+		std::println(stderr, "Failed to create VMA Image");
+		return {};
+	}
+
+	return RawImage{
+		.allocator = allocator,
+		.allocation = allocation,
+		.image = image,
+		.extent = create_info.extent,
+		.format = create_info.format,
+		.levels = create_info.levels,
+	};
 }
 } // namespace lvk
