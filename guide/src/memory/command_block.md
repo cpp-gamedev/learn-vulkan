@@ -9,7 +9,7 @@ The second step requires a command buffer and queue submission (_and_ waiting fo
 
 ```cpp
 class CommandBlock {
-  public:
+ public:
   explicit CommandBlock(vk::Device device, vk::Queue queue,
                         vk::CommandPool command_pool);
 
@@ -19,7 +19,7 @@ class CommandBlock {
 
   void submit_and_wait();
 
-  private:
+ private:
   vk::Device m_device{};
   vk::Queue m_queue{};
   vk::UniqueCommandBuffer m_command_buffer{};

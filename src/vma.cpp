@@ -226,6 +226,7 @@ auto vma::create_sampled_image(ImageCreateInfo const& create_info,
 	dependency_info.setImageMemoryBarriers(barrier);
 	command_block.command_buffer().pipelineBarrier2(dependency_info);
 
+	// record buffer image copy.
 	auto buffer_image_copy = vk::BufferImageCopy2{};
 	auto subresource_layers = vk::ImageSubresourceLayers{};
 	subresource_layers.setAspectMask(vk::ImageAspectFlagBits::eColor)
