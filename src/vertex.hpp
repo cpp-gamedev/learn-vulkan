@@ -6,7 +6,7 @@
 namespace lvk {
 struct Vertex {
 	glm::vec2 position{};
-	glm::vec3 color{};
+	glm::vec3 color{1.0f};
 };
 
 // two vertex attributes: position at 0, color at 1.

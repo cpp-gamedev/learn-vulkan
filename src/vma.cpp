@@ -102,8 +102,8 @@ auto vma::create_device_buffer(BufferCreateInfo const& create_info,
 
 	// create staging Host Buffer with TransferSrc usage.
 	auto staging_buffer =
-		create_buffer(create_info, BufferMemoryType::Host, total_size);
-	// create the Device Buffer, ensuring TransferDst usage.
+		create_buffer(staging_ci, BufferMemoryType::Host, total_size);
+	// create the Device Buffer.
 	auto ret = create_buffer(create_info, BufferMemoryType::Device, total_size);
 	// can't do anything if either buffer creation failed.
 	if (!staging_buffer.get().buffer || !ret.get().buffer) { return {}; }
