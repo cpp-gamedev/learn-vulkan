@@ -13,6 +13,10 @@ void BufferDeleter::operator()(RawBuffer const& raw_buffer) const noexcept {
 	vmaDestroyBuffer(raw_buffer.allocator, raw_buffer.buffer,
 					 raw_buffer.allocation);
 }
+
+void ImageDeleter::operator()(RawImage const& raw_image) const noexcept {
+	vmaDestroyImage(raw_image.allocator, raw_image.image, raw_image.allocation);
+}
 } // namespace vma
 
 auto vma::create_allocator(vk::Instance const instance,
@@ -130,19 +134,21 @@ auto vma::create_device_buffer(BufferCreateInfo const& create_info,
 	return ret;
 }
 
-auto vma::create_image(VmaAllocator allocator,
-					   ImageCreateInfo const& create_info) -> Image {
-	if (create_info.extent.width == 0 || create_info.extent.height == 0) {
+auto vma::create_image(ImageCreateInfo const& create_info,
+					   vk::ImageUsageFlags const usage,
+					   std::uint32_t const levels, vk::Format const format,
+					   vk::Extent2D const extent) -> Image {
+	if (extent.width == 0 || extent.height == 0) {
 		std::println(stderr, "Images cannot have 0 width or height");
 		return {};
 	}
 	auto image_ci = vk::ImageCreateInfo{};
 	image_ci.setImageType(vk::ImageType::e2D)
-		.setExtent({create_info.extent.width, create_info.extent.height, 1})
-		.setFormat(create_info.format)
-		.setUsage(create_info.usage)
+		.setExtent({extent.width, extent.height, 1})
+		.setFormat(format)
+		.setUsage(usage)
 		.setArrayLayers(1)
-		.setMipLevels(create_info.levels)
+		.setMipLevels(levels)
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setTiling(vk::ImageTiling::eOptimal)
 		.setInitialLayout(vk::ImageLayout::eUndefined)
@@ -153,20 +159,20 @@ auto vma::create_image(VmaAllocator allocator,
 	allocation_ci.usage = VMA_MEMORY_USAGE_AUTO;
 	VkImage image{};
 	VmaAllocation allocation{};
-	auto const result = vmaCreateImage(allocator, &vk_image_ci, &allocation_ci,
-									   &image, &allocation, {});
+	auto const result = vmaCreateImage(create_info.allocator, &vk_image_ci,
+									   &allocation_ci, &image, &allocation, {});
 	if (result != VK_SUCCESS) {
 		std::println(stderr, "Failed to create VMA Image");
 		return {};
 	}
 
 	return RawImage{
-		.allocator = allocator,
+		.allocator = create_info.allocator,
 		.allocation = allocation,
 		.image = image,
-		.extent = create_info.extent,
-		.format = create_info.format,
-		.levels = create_info.levels,
+		.extent = extent,
+		.format = format,
+		.levels = levels,
 	};
 }
 } // namespace lvk

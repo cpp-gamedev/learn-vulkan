@@ -73,13 +73,12 @@ struct ImageDeleter {
 using Image = Scoped<RawImage, ImageDeleter>;
 
 struct ImageCreateInfo {
+	VmaAllocator allocator;
 	std::uint32_t queue_family;
-	vk::ImageUsageFlags usage;
-	vk::Format format;
-	vk::Extent2D extent;
-	std::uint32_t levels;
 };
 
-[[nodiscard]] auto create_image(VmaAllocator allocator,
-								ImageCreateInfo const& create_info) -> Image;
+[[nodiscard]] auto create_image(ImageCreateInfo const& create_info,
+								vk::ImageUsageFlags usage, std::uint32_t levels,
+								vk::Format format, vk::Extent2D extent)
+	-> Image;
 } // namespace lvk::vma
