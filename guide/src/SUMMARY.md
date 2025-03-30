@@ -39,4 +39,6 @@
 - [Memory Allocation](memory/README.md)
   - [Vulkan Memory Allocator](memory/vma.md)
   - [Buffers](memory/buffers.md)
-  - [Host Vertex Buffer](memory/host_vertex_buffer.md)
+  - [Vertex Buffer](memory/vertex_buffer.md)
+  - [Command Block](memory/command_block.md)
+  - [Device Buffers](memory/device_buffers.md)

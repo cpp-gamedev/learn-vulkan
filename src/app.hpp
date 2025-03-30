@@ -1,4 +1,5 @@
 #pragma once
+#include <command_block.hpp>
 #include <dear_imgui.hpp>
 #include <gpu.hpp>
 #include <resource_buffering.hpp>
@@ -38,9 +39,11 @@ class App {
 	void create_imgui();
 	void create_allocator();
 	void create_shader();
+	void create_cmd_block_pool();
 	void create_vertex_buffer();
 
 	[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
+	[[nodiscard]] auto create_command_block() const -> CommandBlock;
 
 	void main_loop();
 
@@ -70,6 +73,8 @@ class App {
 	std::optional<Swapchain> m_swapchain{};
 	// command pool for all render Command Buffers.
 	vk::UniqueCommandPool m_render_cmd_pool{};
+	// command pool for all Command Blocks.
+	vk::UniqueCommandPool m_cmd_block_pool{};
 	// Sync and Command Buffer for virtual frames.
 	Buffered<RenderSync> m_render_sync{};
 	// Current virtual frame index.

@@ -1,5 +1,6 @@
 #pragma once
 #include <vk_mem_alloc.h>
+#include <command_block.hpp>
 #include <scoped.hpp>
 #include <vulkan/vulkan.hpp>
 
@@ -37,4 +38,13 @@ using Buffer = Scoped<RawBuffer, BufferDeleter>;
 [[nodiscard]] auto create_host_buffer(VmaAllocator allocator,
 									  vk::BufferUsageFlags usage,
 									  vk::DeviceSize size) -> Buffer;
+
+// disparate byte spans.
+using ByteSpans = std::span<std::span<std::byte const> const>;
+
+// returns a Device Buffer with each byte span sequentially written.
+[[nodiscard]] auto create_device_buffer(VmaAllocator allocator,
+										vk::BufferUsageFlags usage,
+										CommandBlock command_block,
+										ByteSpans const& byte_spans) -> Buffer;
 } // namespace lvk::vma

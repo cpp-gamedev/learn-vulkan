@@ -1,6 +1,6 @@
-# Host Vertex Buffer
+# Vertex Buffer
 
-The goal here is to move the hard-coded vertices in the shader to application code. For the time being we will use an ad-hoc Host type `vma::Buffer` and focus more on the rest of the infrastructure like vertex attributes.
+The goal here is to move the hard-coded vertices in the shader to application code. For the time being we will use an ad-hoc Host `vma::Buffer` and focus more on the rest of the infrastructure like vertex attributes.
 
 First add a new header, `vertex.hpp`:
 
@@ -97,6 +97,6 @@ command_buffer.bindVertexBuffers(0, m_vbo->get_raw().buffer,
 command_buffer.draw(3, 1, 0, 0);
 ```
 
-You should see the same triangle as before. But now we can use whatever set of vertices we like! The Primitive Topology is Triange List by default, so every three vertices in the array is drawn as a triangle, eg for 9 vertices: `[[0, 1, 2], [3, 4, 5], [6, 7, 8]]`, where each inner `[]` represents a triangle comprised of the vertices at those indices.
+You should see the same triangle as before. But now we can use whatever set of vertices we like! The Primitive Topology is Triange List by default, so every three vertices in the array is drawn as a triangle, eg for 9 vertices: `[[0, 1, 2], [3, 4, 5], [6, 7, 8]]`, where each inner `[]` represents a triangle comprised of the vertices at those indices. Try playing around with customized vertices and topologies, use Render Doc to debug unexpected outputs / bugs.
 
 Host Vertex Buffers are useful for primitives that are temporary and/or frequently changing, such as UI objects. A 2D framework can use such VBOs exclusively: a simple approach would be a pool of buffers per virtual frame where for each draw a buffer is obtained from the current virtual frame's pool and vertices are copied in.

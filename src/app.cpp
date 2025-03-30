@@ -1,5 +1,6 @@
 #include <app.hpp>
 #include <vertex.hpp>
+#include <bit>
 #include <cassert>
 #include <chrono>
 #include <fstream>
@@ -12,6 +13,11 @@ namespace lvk {
 using namespace std::chrono_literals;
 
 namespace {
+template <typename T>
+[[nodiscard]] constexpr auto to_byte_array(T const& t) {
+	return std::bit_cast<std::array<std::byte, sizeof(T)>>(t);
+}
+
 [[nodiscard]] auto locate_assets_dir() -> fs::path {
 	// look for '<path>/assets/', starting from the working
 	// directory and walking up the parent directory tree.
@@ -83,6 +89,7 @@ void App::run() {
 	create_render_sync();
 	create_imgui();
 	create_shader();
+	create_cmd_block_pool();
 
 	create_vertex_buffer();
 
@@ -254,24 +261,47 @@ void App::create_shader() {
 	m_shader.emplace(shader_ci);
 }
 
+void App::create_cmd_block_pool() {
+	auto command_pool_ci = vk::CommandPoolCreateInfo{};
+	command_pool_ci
+		.setQueueFamilyIndex(m_gpu.queue_family)
+		// this flag indicates that the allocated Command Buffers will be
+		// short-lived.
+		.setFlags(vk::CommandPoolCreateFlagBits::eTransient);
+	m_cmd_block_pool = m_device->createCommandPoolUnique(command_pool_ci);
+}
+
 void App::create_vertex_buffer() {
-	// vertices previously hard-coded in the vertex shader.
+	// vertices of a quad.
 	static constexpr auto vertices_v = std::array{
 		Vertex{.position = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
 		Vertex{.position = {0.5f, -0.5f}, .color = {0.0f, 1.0f, 0.0f}},
-		Vertex{.position = {0.0f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}},
+		Vertex{.position = {0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}},
+		Vertex{.position = {-0.5f, 0.5f}, .color = {1.0f, 1.0f, 0.0f}},
 	};
-	// we want to write vertices_v to a Host VertexBuffer.
-	m_vbo = vma::create_host_buffer(m_allocator.get(),
-									vk::BufferUsageFlagBits::eVertexBuffer,
-									sizeof(vertices_v));
-
-	// host buffers have a memory-mapped pointer available to memcpy data to.
-	std::memcpy(m_vbo.get().mapped, vertices_v.data(), sizeof(vertices_v));
+	static constexpr auto indices_v = std::array{
+		0u, 1u, 2u, 2u, 3u, 0u,
+	};
+	static constexpr auto vertices_bytes_v = to_byte_array(vertices_v);
+	static constexpr auto indices_bytes_v = to_byte_array(indices_v);
+	static constexpr auto total_bytes_v =
+		std::array<std::span<std::byte const>, 2>{
+			vertices_bytes_v,
+			indices_bytes_v,
+		};
+	// we want to write total_bytes_v to a Device VertexBuffer | IndexBuffer.
+	m_vbo = vma::create_device_buffer(m_allocator.get(),
+									  vk::BufferUsageFlagBits::eVertexBuffer |
+										  vk::BufferUsageFlagBits::eIndexBuffer,
+									  create_command_block(), total_bytes_v);
 }
 
 auto App::asset_path(std::string_view const uri) const -> fs::path {
 	return m_assets_dir / uri;
+}
+
+auto App::create_command_block() const -> CommandBlock {
+	return CommandBlock{*m_device, m_queue, *m_cmd_block_pool};
 }
 
 void App::main_loop() {
@@ -450,7 +480,10 @@ void App::draw(vk::CommandBuffer const command_buffer) const {
 	m_shader->bind(command_buffer, m_framebuffer_size);
 	// single VBO at binding 0 at no offset.
 	command_buffer.bindVertexBuffers(0, m_vbo.get().buffer, vk::DeviceSize{});
-	// m_vbo has 3 vertices.
-	command_buffer.draw(3, 1, 0, 0);
+	// u32 indices after offset of 4 vertices.
+	command_buffer.bindIndexBuffer(m_vbo.get().buffer, 4 * sizeof(Vertex),
+								   vk::IndexType::eUint32);
+	// m_vbo has 6 indices.
+	command_buffer.drawIndexed(6, 1, 0, 0, 0);
 }
 } // namespace lvk
