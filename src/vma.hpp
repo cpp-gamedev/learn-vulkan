@@ -1,5 +1,6 @@
 #pragma once
 #include <vk_mem_alloc.h>
+#include <bitmap.hpp>
 #include <command_block.hpp>
 #include <scoped.hpp>
 #include <vulkan/vulkan.hpp>
@@ -81,4 +82,8 @@ struct ImageCreateInfo {
 								vk::ImageUsageFlags usage, std::uint32_t levels,
 								vk::Format format, vk::Extent2D extent)
 	-> Image;
+
+[[nodiscard]] auto create_sampled_image(ImageCreateInfo const& create_info,
+										CommandBlock command_block,
+										Bitmap const& bitmap) -> Image;
 } // namespace lvk::vma
