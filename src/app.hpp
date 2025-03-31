@@ -4,6 +4,7 @@
 #include <gpu.hpp>
 #include <resource_buffering.hpp>
 #include <scoped_waiter.hpp>
+#include <shader_buffer.hpp>
 #include <shader_program.hpp>
 #include <swapchain.hpp>
 #include <vma.hpp>
@@ -42,6 +43,7 @@ class App {
 	void create_pipeline_layout();
 	void create_shader();
 	void create_cmd_block_pool();
+	void create_shader_resources();
 	void create_descriptor_sets();
 
 	[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
@@ -59,8 +61,11 @@ class App {
 
 	// ImGui code goes here.
 	void inspect();
+	void update_view();
 	// Issue draw calls here.
 	void draw(vk::CommandBuffer command_buffer) const;
+
+	void bind_descriptor_sets(vk::CommandBuffer command_buffer) const;
 
 	fs::path m_assets_dir{};
 
@@ -93,6 +98,7 @@ class App {
 	std::optional<ShaderProgram> m_shader{};
 
 	vma::Buffer m_vbo{};
+	std::optional<ShaderBuffer> m_view_ubo{};
 	Buffered<std::vector<vk::DescriptorSet>> m_descriptor_sets{};
 
 	glm::ivec2 m_framebuffer_size{};

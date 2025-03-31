@@ -1,4 +1,5 @@
 #include <app.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <vertex.hpp>
 #include <bit>
 #include <cassert>
@@ -99,6 +100,7 @@ void App::run() {
 	create_shader();
 	create_cmd_block_pool();
 
+	create_shader_resources();
 	create_descriptor_sets();
 
 	main_loop();
@@ -294,7 +296,7 @@ void App::create_shader() {
 		.vertex_spirv = vertex_spirv,
 		.fragment_spirv = fragment_spirv,
 		.vertex_input = vertex_input_v,
-		.set_layouts = {},
+		.set_layouts = m_set_layout_views,
 	};
 	m_shader.emplace(shader_ci);
 }
@@ -309,13 +311,13 @@ void App::create_cmd_block_pool() {
 	m_cmd_block_pool = m_device->createCommandPoolUnique(command_pool_ci);
 }
 
-void App::create_vertex_buffer() {
+void App::create_shader_resources() {
 	// vertices of a quad.
 	static constexpr auto vertices_v = std::array{
-		Vertex{.position = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
-		Vertex{.position = {0.5f, -0.5f}, .color = {0.0f, 1.0f, 0.0f}},
-		Vertex{.position = {0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}},
-		Vertex{.position = {-0.5f, 0.5f}, .color = {1.0f, 1.0f, 0.0f}},
+		Vertex{.position = {-200.0f, -200.0f}, .color = {1.0f, 0.0f, 0.0f}},
+		Vertex{.position = {200.0f, -200.0f}, .color = {0.0f, 1.0f, 0.0f}},
+		Vertex{.position = {200.0f, 200.0f}, .color = {0.0f, 0.0f, 1.0f}},
+		Vertex{.position = {-200.0f, 200.0f}, .color = {1.0f, 1.0f, 0.0f}},
 	};
 	static constexpr auto indices_v = std::array{
 		0u, 1u, 2u, 2u, 3u, 0u,
@@ -337,6 +339,9 @@ void App::create_vertex_buffer() {
 	m_vbo = vma::create_device_buffer(buffer_ci, create_command_block(),
 									  total_bytes_v);
 
+	m_view_ubo.emplace(m_allocator.get(), m_gpu.queue_family,
+					   vk::BufferUsageFlagBits::eUniformBuffer);
+}
 
 void App::create_descriptor_sets() {
 	for (auto& descriptor_sets : m_descriptor_sets) {
@@ -448,6 +453,7 @@ void App::render(vk::CommandBuffer const command_buffer) {
 
 	command_buffer.beginRendering(rendering_info);
 	inspect();
+	update_view();
 	draw(command_buffer);
 	command_buffer.endRendering();
 
@@ -531,8 +537,19 @@ void App::inspect() {
 	ImGui::End();
 }
 
+void App::update_view() {
+	auto const half_size = 0.5f * glm::vec2{m_framebuffer_size};
+	auto const mat_projection =
+		glm::ortho(-half_size.x, half_size.x, -half_size.y, half_size.y);
+	auto const bytes =
+		std::bit_cast<std::array<std::byte, sizeof(mat_projection)>>(
+			mat_projection);
+	m_view_ubo->write_at(m_frame_index, bytes);
+}
+
 void App::draw(vk::CommandBuffer const command_buffer) const {
 	m_shader->bind(command_buffer, m_framebuffer_size);
+	bind_descriptor_sets(command_buffer);
 	// single VBO at binding 0 at no offset.
 	command_buffer.bindVertexBuffers(0, m_vbo.get().buffer, vk::DeviceSize{});
 	// u32 indices after offset of 4 vertices.
@@ -540,5 +557,24 @@ void App::draw(vk::CommandBuffer const command_buffer) const {
 								   vk::IndexType::eUint32);
 	// m_vbo has 6 indices.
 	command_buffer.drawIndexed(6, 1, 0, 0, 0);
+}
+
+void App::bind_descriptor_sets(vk::CommandBuffer const command_buffer) const {
+	auto writes = std::array<vk::WriteDescriptorSet, 1>{};
+	auto const& descriptor_sets = m_descriptor_sets.at(m_frame_index);
+	auto const set0 = descriptor_sets[0];
+	auto write = vk::WriteDescriptorSet{};
+	auto const view_ubo_info = m_view_ubo->descriptor_info_at(m_frame_index);
+	write.setBufferInfo(view_ubo_info)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setDescriptorCount(1)
+		.setDstSet(set0)
+		.setDstBinding(0);
+	writes[0] = write;
+	m_device->updateDescriptorSets(writes, {});
+
+	command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+									  *m_pipeline_layout, 0, descriptor_sets,
+									  {});
 }
 } // namespace lvk
