@@ -233,3 +233,15 @@ out_color = vec4(in_color, 1.0) * texture(tex, in_uv);
 ```
 
 ![RGBY Texture](./rgby_texture.png)
+
+For generating mip-maps, follow the [sample in the Vulkan docs](https://docs.vulkan.org/samples/latest/samples/api/hpp_texture_mipmap_generation/README.html#_generating_the_mip_chain). The high-level steps are:
+
+1. Compute mip levels based on image size
+1. Create an image with the desired mip levels
+1. Copy the source data to the first mip level as usual
+1. Transition the first mip level to TransferSrc
+1. Iterate through all the remaining mip levels:
+    1. Transition the current mip level to TransferDst
+    1. Record an image blit operation from previous to current mip levels
+    1. Transition the current mip level to TransferSrc
+1. Transition all levels (entire image) to ShaderRead
