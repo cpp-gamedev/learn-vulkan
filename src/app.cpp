@@ -257,6 +257,7 @@ void App::create_descriptor_pool() {
 	static constexpr auto pool_sizes_v = std::array{
 		// 2 uniform buffers, can be more if desired.
 		vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, 2},
+		vk::DescriptorPoolSize{vk::DescriptorType::eCombinedImageSampler, 2},
 	};
 	auto pool_ci = vk::DescriptorPoolCreateInfo{};
 	// allow 16 sets to be allocated from this pool.
@@ -268,8 +269,12 @@ void App::create_pipeline_layout() {
 	static constexpr auto set_0_bindings_v = std::array{
 		layout_binding(0, vk::DescriptorType::eUniformBuffer),
 	};
-	auto set_layout_cis = std::array<vk::DescriptorSetLayoutCreateInfo, 1>{};
+	static constexpr auto set_1_bindings_v = std::array{
+		layout_binding(0, vk::DescriptorType::eCombinedImageSampler),
+	};
+	auto set_layout_cis = std::array<vk::DescriptorSetLayoutCreateInfo, 2>{};
 	set_layout_cis[0].setBindings(set_0_bindings_v);
+	set_layout_cis[1].setBindings(set_1_bindings_v);
 
 	for (auto const& set_layout_ci : set_layout_cis) {
 		m_set_layouts.push_back(
@@ -314,10 +319,10 @@ void App::create_cmd_block_pool() {
 void App::create_shader_resources() {
 	// vertices of a quad.
 	static constexpr auto vertices_v = std::array{
-		Vertex{.position = {-200.0f, -200.0f}, .color = {1.0f, 0.0f, 0.0f}},
-		Vertex{.position = {200.0f, -200.0f}, .color = {0.0f, 1.0f, 0.0f}},
-		Vertex{.position = {200.0f, 200.0f}, .color = {0.0f, 0.0f, 1.0f}},
-		Vertex{.position = {-200.0f, 200.0f}, .color = {1.0f, 1.0f, 0.0f}},
+		Vertex{.position = {-200.0f, -200.0f}, .uv = {0.0f, 1.0f}},
+		Vertex{.position = {200.0f, -200.0f}, .uv = {1.0f, 1.0f}},
+		Vertex{.position = {200.0f, 200.0f}, .uv = {1.0f, 0.0f}},
+		Vertex{.position = {-200.0f, 200.0f}, .uv = {0.0f, 0.0f}},
 	};
 	static constexpr auto indices_v = std::array{
 		0u, 1u, 2u, 2u, 3u, 0u,
@@ -341,6 +346,31 @@ void App::create_shader_resources() {
 
 	m_view_ubo.emplace(m_allocator.get(), m_gpu.queue_family,
 					   vk::BufferUsageFlagBits::eUniformBuffer);
+
+	using Pixel = std::array<std::byte, 4>;
+	static constexpr auto rgby_pixels_v = std::array{
+		Pixel{std::byte{0xff}, {}, {}, std::byte{0xff}},
+		Pixel{std::byte{}, std::byte{0xff}, {}, std::byte{0xff}},
+		Pixel{std::byte{}, {}, std::byte{0xff}, std::byte{0xff}},
+		Pixel{std::byte{0xff}, std::byte{0xff}, {}, std::byte{0xff}},
+	};
+	static constexpr auto rgby_bytes_v =
+		std::bit_cast<std::array<std::byte, sizeof(rgby_pixels_v)>>(
+			rgby_pixels_v);
+	static constexpr auto rgby_bitmap_v = Bitmap{
+		.bytes = rgby_bytes_v,
+		.size = {2, 2},
+	};
+	auto texture_ci = Texture::CreateInfo{
+		.device = *m_device,
+		.allocator = m_allocator.get(),
+		.queue_family = m_gpu.queue_family,
+		.command_block = create_command_block(),
+		.bitmap = rgby_bitmap_v,
+	};
+	// use Nearest filtering instead of Linear (interpolation).
+	texture_ci.sampler.setMagFilter(vk::Filter::eNearest);
+	m_texture.emplace(std::move(texture_ci));
 }
 
 void App::create_descriptor_sets() {
@@ -560,7 +590,7 @@ void App::draw(vk::CommandBuffer const command_buffer) const {
 }
 
 void App::bind_descriptor_sets(vk::CommandBuffer const command_buffer) const {
-	auto writes = std::array<vk::WriteDescriptorSet, 1>{};
+	auto writes = std::array<vk::WriteDescriptorSet, 2>{};
 	auto const& descriptor_sets = m_descriptor_sets.at(m_frame_index);
 	auto const set0 = descriptor_sets[0];
 	auto write = vk::WriteDescriptorSet{};
@@ -571,6 +601,16 @@ void App::bind_descriptor_sets(vk::CommandBuffer const command_buffer) const {
 		.setDstSet(set0)
 		.setDstBinding(0);
 	writes[0] = write;
+
+	auto const set1 = descriptor_sets[1];
+	auto const image_info = m_texture->descriptor_info();
+	write.setImageInfo(image_info)
+		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+		.setDescriptorCount(1)
+		.setDstSet(set1)
+		.setDstBinding(0);
+	writes[1] = write;
+
 	m_device->updateDescriptorSets(writes, {});
 
 	command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,

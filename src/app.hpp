@@ -7,6 +7,7 @@
 #include <shader_buffer.hpp>
 #include <shader_program.hpp>
 #include <swapchain.hpp>
+#include <texture.hpp>
 #include <vma.hpp>
 #include <window.hpp>
 #include <filesystem>
@@ -99,6 +100,7 @@ class App {
 
 	vma::Buffer m_vbo{};
 	std::optional<ShaderBuffer> m_view_ubo{};
+	std::optional<Texture> m_texture{};
 	Buffered<std::vector<vk::DescriptorSet>> m_descriptor_sets{};
 
 	glm::ivec2 m_framebuffer_size{};

@@ -7,6 +7,7 @@ namespace lvk {
 struct Vertex {
 	glm::vec2 position{};
 	glm::vec3 color{1.0f};
+	glm::vec2 uv{};
 };
 
 // two vertex attributes: position at 0, color at 1.
@@ -17,6 +18,9 @@ constexpr auto vertex_attributes_v = std::array{
 	// vec3 => 3x 32-bit floats
 	vk::VertexInputAttributeDescription2EXT{1, 0, vk::Format::eR32G32B32Sfloat,
 											offsetof(Vertex, color)},
+	// vec2 => 2x 32-bit floats
+	vk::VertexInputAttributeDescription2EXT{2, 0, vk::Format::eR32G32Sfloat,
+											offsetof(Vertex, uv)},
 };
 
 // one vertex binding at location 0.

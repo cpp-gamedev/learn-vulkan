@@ -46,3 +46,4 @@
 - [Descriptor Sets](descriptor_sets/README.md)
   - [Pipeline Layout](descriptor_sets/pipeline_layout.md)
   - [Shader Buffer](descriptor_sets/shader_buffer.md)
+  - [Texture](descriptor_sets/texture.md)
