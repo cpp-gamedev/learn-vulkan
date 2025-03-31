@@ -38,12 +38,15 @@ class App {
 	void create_render_sync();
 	void create_imgui();
 	void create_allocator();
+	void create_descriptor_pool();
+	void create_pipeline_layout();
 	void create_shader();
 	void create_cmd_block_pool();
-	void create_vertex_buffer();
+	void create_descriptor_sets();
 
 	[[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
 	[[nodiscard]] auto create_command_block() const -> CommandBlock;
+	[[nodiscard]] auto allocate_sets() const -> std::vector<vk::DescriptorSet>;
 
 	void main_loop();
 
@@ -82,9 +85,15 @@ class App {
 
 	std::optional<DearImGui> m_imgui{};
 
+	vk::UniqueDescriptorPool m_descriptor_pool{};
+	std::vector<vk::UniqueDescriptorSetLayout> m_set_layouts{};
+	std::vector<vk::DescriptorSetLayout> m_set_layout_views{};
+	vk::UniquePipelineLayout m_pipeline_layout{};
+
 	std::optional<ShaderProgram> m_shader{};
 
 	vma::Buffer m_vbo{};
+	Buffered<std::vector<vk::DescriptorSet>> m_descriptor_sets{};
 
 	glm::ivec2 m_framebuffer_size{};
 	std::optional<RenderTarget> m_render_target{};

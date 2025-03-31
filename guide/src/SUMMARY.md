@@ -43,3 +43,5 @@
   - [Command Block](memory/command_block.md)
   - [Device Buffers](memory/device_buffers.md)
   - [Images](memory/images.md)
+- [Descriptor Sets](descriptor_sets/README.md)
+  - [Pipeline Layout](descriptor_sets/pipeline_layout.md)

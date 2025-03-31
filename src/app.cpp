@@ -18,6 +18,12 @@ template <typename T>
 	return std::bit_cast<std::array<std::byte, sizeof(T)>>(t);
 }
 
+constexpr auto layout_binding(std::uint32_t binding,
+							  vk::DescriptorType const type) {
+	return vk::DescriptorSetLayoutBinding{
+		binding, type, 1, vk::ShaderStageFlagBits::eAllGraphics};
+}
+
 [[nodiscard]] auto locate_assets_dir() -> fs::path {
 	// look for '<path>/assets/', starting from the working
 	// directory and walking up the parent directory tree.
@@ -88,10 +94,12 @@ void App::run() {
 	create_swapchain();
 	create_render_sync();
 	create_imgui();
+	create_descriptor_pool();
+	create_pipeline_layout();
 	create_shader();
 	create_cmd_block_pool();
 
-	create_vertex_buffer();
+	create_descriptor_sets();
 
 	main_loop();
 }
@@ -243,6 +251,36 @@ void App::create_allocator() {
 	m_allocator = vma::create_allocator(*m_instance, m_gpu.device, *m_device);
 }
 
+void App::create_descriptor_pool() {
+	static constexpr auto pool_sizes_v = std::array{
+		// 2 uniform buffers, can be more if desired.
+		vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, 2},
+	};
+	auto pool_ci = vk::DescriptorPoolCreateInfo{};
+	// allow 16 sets to be allocated from this pool.
+	pool_ci.setPoolSizes(pool_sizes_v).setMaxSets(16);
+	m_descriptor_pool = m_device->createDescriptorPoolUnique(pool_ci);
+}
+
+void App::create_pipeline_layout() {
+	static constexpr auto set_0_bindings_v = std::array{
+		layout_binding(0, vk::DescriptorType::eUniformBuffer),
+	};
+	auto set_layout_cis = std::array<vk::DescriptorSetLayoutCreateInfo, 1>{};
+	set_layout_cis[0].setBindings(set_0_bindings_v);
+
+	for (auto const& set_layout_ci : set_layout_cis) {
+		m_set_layouts.push_back(
+			m_device->createDescriptorSetLayoutUnique(set_layout_ci));
+		m_set_layout_views.push_back(*m_set_layouts.back());
+	}
+
+	auto pipeline_layout_ci = vk::PipelineLayoutCreateInfo{};
+	pipeline_layout_ci.setSetLayouts(m_set_layout_views);
+	m_pipeline_layout =
+		m_device->createPipelineLayoutUnique(pipeline_layout_ci);
+}
+
 void App::create_shader() {
 	auto const vertex_spirv = to_spir_v(asset_path("shader.vert"));
 	auto const fragment_spirv = to_spir_v(asset_path("shader.frag"));
@@ -298,6 +336,12 @@ void App::create_vertex_buffer() {
 	};
 	m_vbo = vma::create_device_buffer(buffer_ci, create_command_block(),
 									  total_bytes_v);
+
+
+void App::create_descriptor_sets() {
+	for (auto& descriptor_sets : m_descriptor_sets) {
+		descriptor_sets = allocate_sets();
+	}
 }
 
 auto App::asset_path(std::string_view const uri) const -> fs::path {
@@ -306,6 +350,13 @@ auto App::asset_path(std::string_view const uri) const -> fs::path {
 
 auto App::create_command_block() const -> CommandBlock {
 	return CommandBlock{*m_device, m_queue, *m_cmd_block_pool};
+}
+
+auto App::allocate_sets() const -> std::vector<vk::DescriptorSet> {
+	auto allocate_info = vk::DescriptorSetAllocateInfo{};
+	allocate_info.setDescriptorPool(*m_descriptor_pool)
+		.setSetLayouts(m_set_layout_views);
+	return m_device->allocateDescriptorSets(allocate_info);
 }
 
 void App::main_loop() {
