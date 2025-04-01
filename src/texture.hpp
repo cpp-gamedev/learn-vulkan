@@ -2,8 +2,8 @@
 #include <vma.hpp>
 
 namespace lvk {
-[[nodiscard]] constexpr auto create_sampler_ci(vk::SamplerAddressMode wrap,
-											   vk::Filter filter) {
+[[nodiscard]] constexpr auto
+create_sampler_ci(vk::SamplerAddressMode const wrap, vk::Filter const filter) {
 	auto ret = vk::SamplerCreateInfo{};
 	ret.setAddressModeU(wrap)
 		.setAddressModeV(wrap)

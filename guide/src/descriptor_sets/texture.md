@@ -9,8 +9,8 @@ With a large part of the complexity wrapped away in `vma`, a `Texture` is just a
 In `texture.hpp`, create a default sampler:
 
 ```cpp
-[[nodiscard]] constexpr auto create_sampler_ci(vk::SamplerAddressMode wrap,
-                                               vk::Filter filter) {
+[[nodiscard]] constexpr auto
+create_sampler_ci(vk::SamplerAddressMode const wrap, vk::Filter const filter) {
   auto ret = vk::SamplerCreateInfo{};
   ret.setAddressModeU(wrap)
     .setAddressModeV(wrap)
@@ -205,7 +205,7 @@ write.setImageInfo(image_info)
 writes[1] = write;
 ```
 
-Since set 1 is not N-buffered (because the Texture is "GPU const"), in this case the sets could also be updated once after texture creation instead of every frame.
+Since the Texture is not N-buffered (because it is "GPU const"), in this case the sets could also be updated once after texture creation instead of every frame.
 
 Add the UV vertex attribute the vertex shader and pass it to the fragment shader:
 

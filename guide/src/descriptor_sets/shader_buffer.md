@@ -6,7 +6,7 @@ Uniform and Storage buffers need to be N-buffered unless they are "GPU const", i
 class ShaderBuffer {
  public:
   explicit ShaderBuffer(VmaAllocator allocator, std::uint32_t queue_family,
-              vk::BufferUsageFlags usage);
+                        vk::BufferUsageFlags usage);
 
   void write_at(std::size_t frame_index, std::span<std::byte const> bytes);
 
