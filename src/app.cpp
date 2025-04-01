@@ -563,6 +563,14 @@ void App::inspect() {
 			ImGui::DragFloat("line width", &m_shader->line_width, 0.25f,
 							 line_width_range[0], line_width_range[1]);
 		}
+
+		ImGui::Separator();
+		if (ImGui::TreeNode("View")) {
+			ImGui::DragFloat2("position", &m_view_transform.position.x);
+			ImGui::DragFloat("rotation", &m_view_transform.rotation);
+			ImGui::DragFloat2("scale", &m_view_transform.scale.x, 0.1f);
+			ImGui::TreePop();
+		}
 	}
 	ImGui::End();
 }
@@ -571,9 +579,10 @@ void App::update_view() {
 	auto const half_size = 0.5f * glm::vec2{m_framebuffer_size};
 	auto const mat_projection =
 		glm::ortho(-half_size.x, half_size.x, -half_size.y, half_size.y);
+	auto const mat_view = m_view_transform.view_matrix();
+	auto const mat_vp = mat_projection * mat_view;
 	auto const bytes =
-		std::bit_cast<std::array<std::byte, sizeof(mat_projection)>>(
-			mat_projection);
+		std::bit_cast<std::array<std::byte, sizeof(mat_vp)>>(mat_vp);
 	m_view_ubo->write_at(m_frame_index, bytes);
 }
 

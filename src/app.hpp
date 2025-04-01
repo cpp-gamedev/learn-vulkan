@@ -8,6 +8,7 @@
 #include <shader_program.hpp>
 #include <swapchain.hpp>
 #include <texture.hpp>
+#include <transform.hpp>
 #include <vma.hpp>
 #include <window.hpp>
 #include <filesystem>
@@ -106,6 +107,8 @@ class App {
 	glm::ivec2 m_framebuffer_size{};
 	std::optional<RenderTarget> m_render_target{};
 	bool m_wireframe{};
+
+	Transform m_view_transform{};
 
 	// waiter must be the last member to ensure it blocks until device is idle
 	// before other members get destroyed.
