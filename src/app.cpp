@@ -258,6 +258,7 @@ void App::create_descriptor_pool() {
 		// 2 uniform buffers, can be more if desired.
 		vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, 2},
 		vk::DescriptorPoolSize{vk::DescriptorType::eCombinedImageSampler, 2},
+		vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, 2},
 	};
 	auto pool_ci = vk::DescriptorPoolCreateInfo{};
 	// allow 16 sets to be allocated from this pool.
@@ -271,6 +272,7 @@ void App::create_pipeline_layout() {
 	};
 	static constexpr auto set_1_bindings_v = std::array{
 		layout_binding(0, vk::DescriptorType::eCombinedImageSampler),
+		layout_binding(1, vk::DescriptorType::eStorageBuffer),
 	};
 	auto set_layout_cis = std::array<vk::DescriptorSetLayoutCreateInfo, 2>{};
 	set_layout_cis[0].setBindings(set_0_bindings_v);
@@ -346,6 +348,9 @@ void App::create_shader_resources() {
 
 	m_view_ubo.emplace(m_allocator.get(), m_gpu.queue_family,
 					   vk::BufferUsageFlagBits::eUniformBuffer);
+
+	m_instance_ssbo.emplace(m_allocator.get(), m_gpu.queue_family,
+							vk::BufferUsageFlagBits::eStorageBuffer);
 
 	using Pixel = std::array<std::byte, 4>;
 	static constexpr auto rgby_pixels_v = std::array{
@@ -484,6 +489,7 @@ void App::render(vk::CommandBuffer const command_buffer) {
 	command_buffer.beginRendering(rendering_info);
 	inspect();
 	update_view();
+	update_instances();
 	draw(command_buffer);
 	command_buffer.endRendering();
 
@@ -564,11 +570,27 @@ void App::inspect() {
 							 line_width_range[0], line_width_range[1]);
 		}
 
+		static auto const inspect_transform = [](Transform& out) {
+			ImGui::DragFloat2("position", &out.position.x);
+			ImGui::DragFloat("rotation", &out.rotation);
+			ImGui::DragFloat2("scale", &out.scale.x, 0.1f);
+		};
+
 		ImGui::Separator();
 		if (ImGui::TreeNode("View")) {
-			ImGui::DragFloat2("position", &m_view_transform.position.x);
-			ImGui::DragFloat("rotation", &m_view_transform.rotation);
-			ImGui::DragFloat2("scale", &m_view_transform.scale.x, 0.1f);
+			inspect_transform(m_view_transform);
+			ImGui::TreePop();
+		}
+
+		ImGui::Separator();
+		if (ImGui::TreeNode("Instances")) {
+			for (std::size_t i = 0; i < m_instances.size(); ++i) {
+				auto const label = std::to_string(i);
+				if (ImGui::TreeNode(label.c_str())) {
+					inspect_transform(m_instances.at(i));
+					ImGui::TreePop();
+				}
+			}
 			ImGui::TreePop();
 		}
 	}
@@ -586,6 +608,20 @@ void App::update_view() {
 	m_view_ubo->write_at(m_frame_index, bytes);
 }
 
+void App::update_instances() {
+	m_instance_data.clear();
+	m_instance_data.reserve(m_instances.size());
+	for (auto const& transform : m_instances) {
+		m_instance_data.push_back(transform.model_matrix());
+	}
+	// can't use bit_cast anymore, reinterpret data as a byte array instead.
+	auto const span = std::span{m_instance_data};
+	void* data = span.data();
+	auto const bytes =
+		std::span{static_cast<std::byte const*>(data), span.size_bytes()};
+	m_instance_ssbo->write_at(m_frame_index, bytes);
+}
+
 void App::draw(vk::CommandBuffer const command_buffer) const {
 	m_shader->bind(command_buffer, m_framebuffer_size);
 	bind_descriptor_sets(command_buffer);
@@ -594,12 +630,13 @@ void App::draw(vk::CommandBuffer const command_buffer) const {
 	// u32 indices after offset of 4 vertices.
 	command_buffer.bindIndexBuffer(m_vbo.get().buffer, 4 * sizeof(Vertex),
 								   vk::IndexType::eUint32);
+	auto const instances = static_cast<std::uint32_t>(m_instances.size());
 	// m_vbo has 6 indices.
-	command_buffer.drawIndexed(6, 1, 0, 0, 0);
+	command_buffer.drawIndexed(6, instances, 0, 0, 0);
 }
 
 void App::bind_descriptor_sets(vk::CommandBuffer const command_buffer) const {
-	auto writes = std::array<vk::WriteDescriptorSet, 2>{};
+	auto writes = std::array<vk::WriteDescriptorSet, 3>{};
 	auto const& descriptor_sets = m_descriptor_sets.at(m_frame_index);
 	auto const set0 = descriptor_sets[0];
 	auto write = vk::WriteDescriptorSet{};
@@ -619,6 +656,14 @@ void App::bind_descriptor_sets(vk::CommandBuffer const command_buffer) const {
 		.setDstSet(set1)
 		.setDstBinding(0);
 	writes[1] = write;
+	auto const instance_ssbo_info =
+		m_instance_ssbo->descriptor_info_at(m_frame_index);
+	write.setBufferInfo(instance_ssbo_info)
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
+		.setDescriptorCount(1)
+		.setDstSet(set1)
+		.setDstBinding(1);
+	writes[2] = write;
 
 	m_device->updateDescriptorSets(writes, {});
 

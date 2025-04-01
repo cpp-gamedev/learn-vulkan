@@ -8,11 +8,16 @@ layout (set = 0, binding = 0) uniform View {
 	mat4 mat_vp;
 };
 
+layout (set = 1, binding = 1) readonly buffer Instances {
+	mat4 mat_ms[];
+};
+
 layout (location = 0) out vec3 out_color;
 layout (location = 1) out vec2 out_uv;
 
 void main() {
-	const vec4 world_pos = vec4(a_pos, 0.0, 1.0);
+	const mat4 mat_m = mat_ms[gl_InstanceIndex];
+	const vec4 world_pos = mat_m * vec4(a_pos, 0.0, 1.0);
 
 	out_color = a_color;
 	out_uv = a_uv;

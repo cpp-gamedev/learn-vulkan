@@ -48,3 +48,4 @@
   - [Shader Buffer](descriptor_sets/shader_buffer.md)
   - [Texture](descriptor_sets/texture.md)
   - [View Matrix](descriptor_sets/view_matrix.md)
+  - [Instanced Rendering](descriptor_sets/instanced_rendering.md)

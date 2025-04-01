@@ -64,6 +64,7 @@ class App {
 	// ImGui code goes here.
 	void inspect();
 	void update_view();
+	void update_instances();
 	// Issue draw calls here.
 	void draw(vk::CommandBuffer command_buffer) const;
 
@@ -102,13 +103,16 @@ class App {
 	vma::Buffer m_vbo{};
 	std::optional<ShaderBuffer> m_view_ubo{};
 	std::optional<Texture> m_texture{};
+	std::vector<glm::mat4> m_instance_data{}; // model matrices.
+	std::optional<ShaderBuffer> m_instance_ssbo{};
 	Buffered<std::vector<vk::DescriptorSet>> m_descriptor_sets{};
 
 	glm::ivec2 m_framebuffer_size{};
 	std::optional<RenderTarget> m_render_target{};
 	bool m_wireframe{};
 
-	Transform m_view_transform{};
+	Transform m_view_transform{};			// generates view matrix.
+	std::array<Transform, 2> m_instances{}; // generates model matrices.
 
 	// waiter must be the last member to ensure it blocks until device is idle
 	// before other members get destroyed.

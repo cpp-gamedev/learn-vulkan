@@ -55,7 +55,7 @@ auto Transform::view_matrix() const -> glm::mat4 {
 Add a `Transform` member to `App` to represent the view/camera, inspect its members, and combine with the existing projection matrix:
 
 ```cpp
-Transform m_view_transform{};
+Transform m_view_transform{}; // generates view matrix.
 
 // ...
 ImGui::Separator();
