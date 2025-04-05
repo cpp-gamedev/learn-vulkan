@@ -272,11 +272,14 @@ void App::create_pipeline_layout() {
 	};
 	static constexpr auto set_1_bindings_v = std::array{
 		layout_binding(0, vk::DescriptorType::eCombinedImageSampler),
-		layout_binding(1, vk::DescriptorType::eStorageBuffer),
 	};
-	auto set_layout_cis = std::array<vk::DescriptorSetLayoutCreateInfo, 2>{};
+	static constexpr auto set_2_bindings_v = std::array{
+		layout_binding(0, vk::DescriptorType::eStorageBuffer),
+	};
+	auto set_layout_cis = std::array<vk::DescriptorSetLayoutCreateInfo, 3>{};
 	set_layout_cis[0].setBindings(set_0_bindings_v);
 	set_layout_cis[1].setBindings(set_1_bindings_v);
+	set_layout_cis[2].setBindings(set_2_bindings_v);
 
 	for (auto const& set_layout_ci : set_layout_cis) {
 		m_set_layouts.push_back(
@@ -656,13 +659,15 @@ void App::bind_descriptor_sets(vk::CommandBuffer const command_buffer) const {
 		.setDstSet(set1)
 		.setDstBinding(0);
 	writes[1] = write;
+
+	auto const set2 = descriptor_sets[2];
 	auto const instance_ssbo_info =
 		m_instance_ssbo->descriptor_info_at(m_frame_index);
 	write.setBufferInfo(instance_ssbo_info)
 		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
 		.setDescriptorCount(1)
-		.setDstSet(set1)
-		.setDstBinding(1);
+		.setDstSet(set2)
+		.setDstBinding(0);
 	writes[2] = write;
 
 	m_device->updateDescriptorSets(writes, {});

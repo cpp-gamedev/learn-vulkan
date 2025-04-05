@@ -41,13 +41,19 @@ vk::DescriptorPoolSize{vk::DescriptorType::eCombinedImageSampler, 2},
 vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, 2},
 ```
 
-This time add a new binding to set 1 (instead of a new set):
+Add set 2 and its new binding. Such a set layout keeps each "layer" isolated:
+
+* Set 0: view / camera
+* Set 1: textures / material
+* Set 2: draw instances
 
 ```cpp
-static constexpr auto set_1_bindings_v = std::array{
-  layout_binding(0, vk::DescriptorType::eCombinedImageSampler),
+static constexpr auto set_2_bindings_v = std::array{
   layout_binding(1, vk::DescriptorType::eStorageBuffer),
 };
+auto set_layout_cis = std::array<vk::DescriptorSetLayoutCreateInfo, 3>{};
+// ...
+set_layout_cis[2].setBindings(set_2_bindings_v);
 ```
 
 Create the instance SSBO after the view UBO:
@@ -98,13 +104,14 @@ Add another descriptor write for the SSBO:
 ```cpp
 auto writes = std::array<vk::WriteDescriptorSet, 3>{};
 // ...
+auto const set2 = descriptor_sets[2];
 auto const instance_ssbo_info =
   m_instance_ssbo->descriptor_info_at(m_frame_index);
 write.setBufferInfo(instance_ssbo_info)
   .setDescriptorType(vk::DescriptorType::eStorageBuffer)
   .setDescriptorCount(1)
-  .setDstSet(set1)
-  .setDstBinding(1);
+  .setDstSet(set2)
+  .setDstBinding(0);
 writes[2] = write;
 ```
 
