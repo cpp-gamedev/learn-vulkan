@@ -45,7 +45,7 @@
   - [Images](memory/images.md)
 - [Descriptor Sets](descriptor_sets/README.md)
   - [Pipeline Layout](descriptor_sets/pipeline_layout.md)
-  - [Shader Buffer](descriptor_sets/shader_buffer.md)
+  - [Descriptor Buffer](descriptor_sets/descriptor_buffer.md)
   - [Texture](descriptor_sets/texture.md)
   - [View Matrix](descriptor_sets/view_matrix.md)
   - [Instanced Rendering](descriptor_sets/instanced_rendering.md)

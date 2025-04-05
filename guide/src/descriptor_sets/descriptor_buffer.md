@@ -1,12 +1,13 @@
-# Shader Buffer
+# Descriptor Buffer
 
-Uniform and Storage buffers need to be N-buffered unless they are "GPU const", ie contents do not change after creation.  Encapsulate a `vma::Buffer` per virtual frame in a `ShaderBuffer`:
+Uniform and Storage buffers need to be N-buffered unless they are "GPU const", ie contents do not change after creation.  Encapsulate a `vma::Buffer` per virtual frame in a `DescriptorBuffer`:
 
 ```cpp
-class ShaderBuffer {
+class DescriptorBuffer {
  public:
-  explicit ShaderBuffer(VmaAllocator allocator, std::uint32_t queue_family,
-                        vk::BufferUsageFlags usage);
+  explicit DescriptorBuffer(VmaAllocator allocator,
+                            std::uint32_t queue_family,
+                            vk::BufferUsageFlags usage);
 
   void write_at(std::size_t frame_index, std::span<std::byte const> bytes);
 
@@ -31,20 +32,20 @@ class ShaderBuffer {
 The implementation is fairly straightforward, it reuses existing buffers if they are large enough, else recreates them before copying data. It also ensures buffers are always valid to be bound to descriptors.
 
 ```cpp
-ShaderBuffer::ShaderBuffer(VmaAllocator allocator,
-                           std::uint32_t const queue_family,
-                           vk::BufferUsageFlags const usage)
+DescriptorBuffer::DescriptorBuffer(VmaAllocator allocator,
+                                   std::uint32_t const queue_family,
+                                   vk::BufferUsageFlags const usage)
   : m_allocator(allocator), m_queue_family(queue_family), m_usage(usage) {
   // ensure buffers are created and can be bound after returning.
   for (auto& buffer : m_buffers) { write_to(buffer, {}); }
 }
 
-void ShaderBuffer::write_at(std::size_t const frame_index,
-                            std::span<std::byte const> bytes) {
+void DescriptorBuffer::write_at(std::size_t const frame_index,
+                                std::span<std::byte const> bytes) {
   write_to(m_buffers.at(frame_index), bytes);
 }
 
-auto ShaderBuffer::descriptor_info_at(std::size_t const frame_index) const
+auto DescriptorBuffer::descriptor_info_at(std::size_t const frame_index) const
   -> vk::DescriptorBufferInfo {
   auto const& buffer = m_buffers.at(frame_index);
   auto ret = vk::DescriptorBufferInfo{};
@@ -52,8 +53,8 @@ auto ShaderBuffer::descriptor_info_at(std::size_t const frame_index) const
   return ret;
 }
 
-void ShaderBuffer::write_to(Buffer& out,
-                            std::span<std::byte const> bytes) const {
+void DescriptorBuffer::write_to(Buffer& out,
+                                std::span<std::byte const> bytes) const {
   static constexpr auto blank_byte_v = std::array{std::byte{}};
   // fallback to an empty byte if bytes is empty.
   if (bytes.empty()) { bytes = blank_byte_v; }
@@ -72,17 +73,17 @@ void ShaderBuffer::write_to(Buffer& out,
 }
 ```
 
-Store a `ShaderBuffer` in `App` and rename `create_vertex_buffer()` to `create_shader_resources()`:
+Store a `DescriptorBuffer` in `App` and rename `create_vertex_buffer()` to `create_shader_resources()`:
 
 ```cpp
-std::optional<ShaderBuffer> m_view_ubo{};
+std::optional<DescriptorBuffer> m_view_ubo{};
 
 // ...
 m_vbo = vma::create_device_buffer(buffer_ci, create_command_block(),
                                   total_bytes_v);
 
 m_view_ubo.emplace(m_allocator.get(), m_gpu.queue_family,
-              vk::BufferUsageFlagBits::eUniformBuffer);
+                   vk::BufferUsageFlagBits::eUniformBuffer);
 ```
 
 Add functions to update the view/projection matrices and bind the frame's descriptor sets:
@@ -170,4 +171,4 @@ static constexpr auto vertices_v = std::array{
 
 ![View UBO](./view_ubo.png)
 
-When such shader buffers are created and (more importantly) destroyed dynamically, they would need to store a `ScopedWaiter` to ensure all rendering with descriptor sets bound to them completes before destruction. Alternatively, the app can maintain a pool of scratch buffers (similar to small/dynamic vertex buffers) per virtual frame which get destroyed in a batch instead of individually.
+When such descriptor buffers are created and destroyed dynamically, they would need to store a `ScopedWaiter` to ensure all rendering with descriptor sets bound to them completes before destruction. Alternatively, the app can maintain a pool of scratch buffers (similar to small/dynamic vertex buffers) per virtual frame which get destroyed in a batch instead of individually.

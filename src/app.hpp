@@ -1,10 +1,10 @@
 #pragma once
 #include <command_block.hpp>
 #include <dear_imgui.hpp>
+#include <descriptor_buffer.hpp>
 #include <gpu.hpp>
 #include <resource_buffering.hpp>
 #include <scoped_waiter.hpp>
-#include <shader_buffer.hpp>
 #include <shader_program.hpp>
 #include <swapchain.hpp>
 #include <texture.hpp>
@@ -101,10 +101,10 @@ class App {
 	std::optional<ShaderProgram> m_shader{};
 
 	vma::Buffer m_vbo{};
-	std::optional<ShaderBuffer> m_view_ubo{};
+	std::optional<DescriptorBuffer> m_view_ubo{};
 	std::optional<Texture> m_texture{};
 	std::vector<glm::mat4> m_instance_data{}; // model matrices.
-	std::optional<ShaderBuffer> m_instance_ssbo{};
+	std::optional<DescriptorBuffer> m_instance_ssbo{};
 	Buffered<std::vector<vk::DescriptorSet>> m_descriptor_sets{};
 
 	glm::ivec2 m_framebuffer_size{};

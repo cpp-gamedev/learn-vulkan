@@ -6,7 +6,7 @@ Store the SSBO and a buffer for instance matrices:
 
 ```cpp
 std::vector<glm::mat4> m_instance_data{}; // model matrices.
-std::optional<ShaderBuffer> m_instance_ssbo{};
+std::optional<DescriptorBuffer> m_instance_ssbo{};
 ```
 
 Add two `Transform`s as the source of rendering instances, and a function to update the matrices:

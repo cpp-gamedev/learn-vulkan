@@ -4,10 +4,11 @@
 #include <cstdint>
 
 namespace lvk {
-class ShaderBuffer {
+class DescriptorBuffer {
   public:
-	explicit ShaderBuffer(VmaAllocator allocator, std::uint32_t queue_family,
-						  vk::BufferUsageFlags usage);
+	explicit DescriptorBuffer(VmaAllocator allocator,
+							  std::uint32_t queue_family,
+							  vk::BufferUsageFlags usage);
 
 	void write_at(std::size_t frame_index, std::span<std::byte const> bytes);
 

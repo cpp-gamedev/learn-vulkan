@@ -1,20 +1,20 @@
-#include <shader_buffer.hpp>
+#include <descriptor_buffer.hpp>
 
 namespace lvk {
-ShaderBuffer::ShaderBuffer(VmaAllocator allocator,
-						   std::uint32_t const queue_family,
-						   vk::BufferUsageFlags const usage)
+DescriptorBuffer::DescriptorBuffer(VmaAllocator allocator,
+								   std::uint32_t const queue_family,
+								   vk::BufferUsageFlags const usage)
 	: m_allocator(allocator), m_queue_family(queue_family), m_usage(usage) {
 	// ensure buffers are created and can be bound after returning.
 	for (auto& buffer : m_buffers) { write_to(buffer, {}); }
 }
 
-void ShaderBuffer::write_at(std::size_t const frame_index,
-							std::span<std::byte const> bytes) {
+void DescriptorBuffer::write_at(std::size_t const frame_index,
+								std::span<std::byte const> bytes) {
 	write_to(m_buffers.at(frame_index), bytes);
 }
 
-auto ShaderBuffer::descriptor_info_at(std::size_t const frame_index) const
+auto DescriptorBuffer::descriptor_info_at(std::size_t const frame_index) const
 	-> vk::DescriptorBufferInfo {
 	auto const& buffer = m_buffers.at(frame_index);
 	auto ret = vk::DescriptorBufferInfo{};
@@ -22,8 +22,8 @@ auto ShaderBuffer::descriptor_info_at(std::size_t const frame_index) const
 	return ret;
 }
 
-void ShaderBuffer::write_to(Buffer& out,
-							std::span<std::byte const> bytes) const {
+void DescriptorBuffer::write_to(Buffer& out,
+								std::span<std::byte const> bytes) const {
 	static constexpr auto blank_byte_v = std::array{std::byte{}};
 	// fallback to an empty byte if bytes is empty.
 	if (bytes.empty()) { bytes = blank_byte_v; }
