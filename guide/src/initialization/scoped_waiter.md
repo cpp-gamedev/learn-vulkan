@@ -35,8 +35,8 @@ class Scoped {
     Deleter{}(m_t);
   }
 
-  [[nodiscard]] auto get() const -> Type const& { return m_t; }
-  [[nodiscard]] auto get() -> Type& { return m_t; }
+  [[nodiscard]] constexpr auto get() const -> Type const& { return m_t; }
+  [[nodiscard]] constexpr auto get() -> Type& { return m_t; }
 
  private:
   Type m_t{};

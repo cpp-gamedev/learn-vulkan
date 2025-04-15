@@ -3,6 +3,7 @@ on:
   push:
     branches-ignore:
       - staging
+      - production
 jobs:
   format-check:
     runs-on: ubuntu-latest

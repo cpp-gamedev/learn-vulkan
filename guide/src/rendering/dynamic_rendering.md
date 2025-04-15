@@ -102,7 +102,7 @@ void App::transition_for_render(vk::CommandBuffer const command_buffer) const {
 }
 ```
 
-Create an Rendering Attachment Info using the acquired image as the color target. We use a red clear color, make sure the Load Op clears the image, and Store Op stores the results (currently just the cleared image). Set up a Rendering Info object with the color attachment and the entire image as the render area. Finally, execute the render:
+Create a Rendering Attachment Info using the acquired image as the color target. We use a red clear color, make sure the Load Op clears the image, and Store Op stores the results (currently just the cleared image). Set up a Rendering Info object with the color attachment and the entire image as the render area. Finally, execute the render:
 
 ```cpp
 void App::render(vk::CommandBuffer const command_buffer) {

@@ -167,7 +167,7 @@ static constexpr auto flags_v = AlphaBlend | DepthTest;
 std::uint8_t flags{flags_v};
 ```
 
-There is one more piece of pipeline state needed: vertex input. We will consider this to be constant per shader and take it in the constructor:
+There is one more piece of pipeline state needed: vertex input. We will consider this to be constant per shader and store it in the constructor:
 
 ```cpp
 // shader_program.hpp

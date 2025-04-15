@@ -27,6 +27,10 @@ target_compile_definitions(glm PUBLIC
 message(STATUS "[Vulkan-Headers]")
 add_subdirectory(src/Vulkan-Headers)
 
+# add VulkanMemoryAllocator to build tree
+message(STATUS "[VulkanMemoryAllocator]")
+add_subdirectory(src/VulkanMemoryAllocator)
+
 # setup Dear ImGui library
 message(STATUS "[Dear ImGui]")
 add_library(imgui)
@@ -55,6 +59,28 @@ target_sources(imgui PRIVATE
   src/imgui/backends/imgui_impl_vulkan.h
 )
 
+# setup vma library (source file with VMA interface)
+message(STATUS "[vma]")
+add_library(vma)
+add_library(vma::vma ALIAS vma)
+target_link_libraries(vma PUBLIC
+  Vulkan::Headers
+  GPUOpen::VulkanMemoryAllocator
+)
+target_include_directories(vma SYSTEM PUBLIC
+  src/VulkanMemoryAllocator/include
+)
+target_compile_definitions(vma PUBLIC
+  VMA_STATIC_VULKAN_FUNCTIONS=0
+  VMA_DYNAMIC_VULKAN_FUNCTIONS=1
+)
+target_sources(vma PRIVATE
+  vk_mem_alloc.cpp
+)
+
+# ignore compiler warnings
+target_compile_options(vma PRIVATE -w)
+
 # declare ext library target
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(learn-vk::ext ALIAS ${PROJECT_NAME})
@@ -63,6 +89,7 @@ add_library(learn-vk::ext ALIAS ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} INTERFACE
   glm::glm
   imgui::imgui
+  vma::vma
 )
 
 # setup preprocessor defines

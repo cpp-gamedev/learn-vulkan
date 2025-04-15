@@ -4,8 +4,7 @@
 
 namespace lvk {
 template <typename Type>
-concept Scopeable =
-	std::equality_comparable<Type> && std::is_default_constructible_v<Type>;
+concept Scopeable = std::equality_comparable<Type>;
 
 template <Scopeable Type, typename Deleter>
 class Scoped {
@@ -30,8 +29,8 @@ class Scoped {
 		Deleter{}(m_t);
 	}
 
-	[[nodiscard]] auto get() const -> Type const& { return m_t; }
-	[[nodiscard]] auto get() -> Type& { return m_t; }
+	[[nodiscard]] constexpr auto get() const -> Type const& { return m_t; }
+	[[nodiscard]] constexpr auto get() -> Type& { return m_t; }
 
   private:
 	Type m_t{};

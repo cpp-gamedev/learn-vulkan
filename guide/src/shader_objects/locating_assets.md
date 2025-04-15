@@ -1,6 +1,6 @@
 # Locating Assets
 
-Before we can use shaders (and thus graphics pipelines), we need to load them as asset/data files. To do that correctly, first the asset directory needs to be located. There are a few ways to go about this, we will use the approach of looking for a particular subdirectory, starting from the working directory and walking up the parent directory tree. This enables `app` in any project/build subdirectory to locate `assets/` in the various examples below:
+Before we can use shaders, we need to load them as asset/data files. To do that correctly, first the asset directory needs to be located. There are a few ways to go about this, we will use the approach of looking for a particular subdirectory, starting from the working directory and walking up the parent directory tree. This enables `app` in any project/build subdirectory to locate `assets/` in the various examples below:
 
 ```
 .
@@ -40,7 +40,7 @@ Add a helper function to locate the assets dir, and assign `m_assets_dir` to its
     auto ret = path / dir_name_v;
     if (fs::is_directory(ret)) { return ret; }
   }
-  std::println("[lvk] Warning: could not locate 'assets' directory");
+  std::println("[lvk] Warning: could not locate '{}' directory", dir_name_v);
   return fs::current_path();
 }
 

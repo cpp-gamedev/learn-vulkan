@@ -1,6 +1,6 @@
 # Vulkan Device
 
-A [Vulkan Device](https://registry.khronos.org/vulkan/specs/latest/man/html/VkDevice.html) is a logical instance of a Physical Device, and will the primary interface for everything Vulkan now onwards. [Vulkan Queues](https://registry.khronos.org/vulkan/specs/latest/man/html/VkQueue.html) are owned by the Device, we will need one from the queue family stored in the `Gpu`, to submit recorded command buffers. We also need to explicitly declare all features we want to use, eg [Dynamic Rendering](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_dynamic_rendering.html) and [Synchronization2](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_synchronization2.html).
+A [Vulkan Device](https://docs.vulkan.org/spec/latest/chapters/devsandqueues.html#devsandqueues-devices) is a logical instance of a Physical Device, and will the primary interface for everything Vulkan now onwards. [Vulkan Queues](https://docs.vulkan.org/spec/latest/chapters/devsandqueues.html#devsandqueues-queues) are owned by the Device, we will need one from the queue family stored in the `Gpu` to submit recorded command buffers. We also need to explicitly declare all features we want to use, eg [Dynamic Rendering](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_dynamic_rendering.html) and [Synchronization2](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_synchronization2.html).
 
 Setup a `vk::QueueCreateInfo` object:
 

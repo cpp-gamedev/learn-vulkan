@@ -1,6 +1,6 @@
 # GLSL to SPIR-V
 
-Shaders work in NDC space: -1 to +1 for X and Y. We set up a triangle's coordinates and output that in the vertex shader save it to `src/glsl/shader.vert`:
+Shaders work in NDC space: -1 to +1 for X and Y. We output a triangle's coordinates in a new vertex shader and save it to `src/glsl/shader.vert`:
 
 ```glsl
 #version 450 core

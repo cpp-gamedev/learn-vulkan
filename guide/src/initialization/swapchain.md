@@ -1,6 +1,6 @@
 # Swapchain
 
-A [Vulkan Swapchain](https://registry.khronos.org/vulkan/specs/latest/man/html/VkSwapchainKHR.html) is an array of presentable images associated with a Surface, which acts as a bridge between the application and the platform's presentation engine (compositor / display engine). The Swapchain will be continually used in the main loop to acquire and present images. Since failing to create a Swapchain is a fatal error, its creation is part of the initialization section.
+A [Vulkan Swapchain](https://docs.vulkan.org/guide/latest/wsi.html#_swapchain) is an array of presentable images associated with a Surface, which acts as a bridge between the application and the platform's presentation engine (compositor / display engine). The Swapchain will be continually used in the main loop to acquire and present images. Since failing to create a Swapchain is a fatal error, its creation is part of the initialization section.
 
 We shall wrap the Vulkan Swapchain into our own `class Swapchain`. It will also store the a copy of the Images owned by the Vulkan Swapchain, and create (and own) Image Views for each Image. The Vulkan Swapchain may need to be recreated in the main loop, eg when the framebuffer size changes, or an acquire/present operation returns `vk::ErrorOutOfDateKHR`. This will be encapsulated in a `recreate()` function which can simply be called during initialization as well.
 
@@ -64,7 +64,7 @@ get_surface_format(std::span<vk::SurfaceFormatKHR const> supported)
 }
 ```
 
-An sRGB format is preferred because that is what the screen's color space is in. This is indicated by the fact that the only core [Color Format](https://registry.khronos.org/vulkan/specs/latest/man/html/VkColorSpaceKHR.html) is `vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear`, which specifies support for the images in sRGB color space.
+An sRGB format is preferred because that is what the screen's color space is in. This is indicated by the fact that the only core [Color Space](https://registry.khronos.org/vulkan/specs/latest/man/html/VkColorSpaceKHR.html) is `vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear`, which specifies support for the images in sRGB color space.
 
 The constructor can now be implemented:
 

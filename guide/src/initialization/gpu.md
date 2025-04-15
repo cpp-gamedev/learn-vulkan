@@ -1,6 +1,6 @@
 # Vulkan Physical Device
 
-A [Physical Device](https://registry.khronos.org/vulkan/specs/latest/man/html/VkPhysicalDevice.html) represents a single complete implementation of Vulkan, for our intents and purposes a single GPU. (It could also be eg a software renderer like Mesa/lavapipe.) Some machines may have multiple Physical Devices available, like laptops with dual-GPUs. We need to select the one we want to use, given our constraints:
+A [Physical Device](https://docs.vulkan.org/spec/latest/chapters/devsandqueues.html#devsandqueues-physical-device-enumeration) represents a single complete implementation of Vulkan, for our intents and purposes a single GPU. (It could also be eg a software renderer like Mesa/lavapipe.) Some machines may have multiple Physical Devices available, like laptops with dual-GPUs. We need to select the one we want to use, given our constraints:
 
 1. Vulkan 1.3 must be supported
 1. Vulkan Swapchains must be supported

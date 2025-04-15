@@ -1,8 +1,8 @@
 # GLFW Window
 
-We will use GLFW (3.4) for windowing and related events. The library - like all external dependencies - is configured and added to the build tree in `ext/CMakeLists.txt`. `GLFW_INCLUDE_VULKAN` is defined for all consumers, to enable GLFW's Vulkan related functions (known as **Window System Integration (WSI)**). GLFW 3.4 supports Wayland on Linux, and by default it builds backends for both X11 and Wayland. For this reason it will need the development headers for both platforms (and some other Wayland/CMake dependencies) to configure/build successfully. A particular backend can be requested at runtime if desired via `GLFW_PLATFORM`.
+We will use GLFW (3.4) for windowing and related events. The library - like all external dependencies - is configured and added to the build tree in `ext/CMakeLists.txt`. `GLFW_INCLUDE_VULKAN` is defined for all consumers, to enable GLFW's Vulkan related functions (known as **Window System Integration (WSI)**). GLFW 3.4 supports Wayland on Linux, and by default it builds backends for both X11 and Wayland. For this reason it will need the development packages for [both platforms](https://www.glfw.org/docs/latest/compile_guide.html#compile_deps_wayland) (and some other Wayland/CMake dependencies) to configure/build successfully. A particular backend can be requested at runtime if desired via `GLFW_PLATFORM`.
 
-Although it is quite feasible to have multiple windows in a Vulkan-GLFW application, that is out of scope of this guide. So for our purposes GLFW (the library) and a single window are a monolithic unit - initialized and destroyed together. This can be encapsulated in a `std::unique_ptr` with a custom deleter, especially since GLFW returns an opaque pointer (`GLFWwindow*`).
+Although it is quite feasible to have multiple windows in a Vulkan-GLFW application, that is out of scope for this guide. For our purposes GLFW (the library) and a single window are a monolithic unit - initialized and destroyed together. This can be encapsulated in a `std::unique_ptr` with a custom deleter, especially since GLFW returns an opaque pointer (`GLFWwindow*`).
 
 ```cpp
 // window.hpp
