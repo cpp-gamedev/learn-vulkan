@@ -1,8 +1,8 @@
 # GLFW Window
 
-We will use GLFW (3.4) for windowing and related events. The library - like all external dependencies - is configured and added to the build tree in `ext/CMakeLists.txt`. `GLFW_INCLUDE_VULKAN` is defined for all consumers, to enable GLFW's Vulkan related functions (known as **Window System Integration (WSI)**). GLFW 3.4 supports Wayland on Linux, and by default it builds backends for both X11 and Wayland. For this reason it will need the development packages for [both platforms](https://www.glfw.org/docs/latest/compile_guide.html#compile_deps_wayland) (and some other Wayland/CMake dependencies) to configure/build successfully. A particular backend can be requested at runtime if desired via `GLFW_PLATFORM`.
+창 생성과 이벤트 처리를 위해 GLFW 3.4를 사용할 것입니다. 모든 외부 의존 라이브러리들은 `ext/CMakeLists.txt`에 구성되어 빌드 트리에 추가됩니다. `GLFW_INCLUDE_VULKAN`은 GLFW의 Vulkan 관련 기능(WSI, Window System Integration)을 활성화하기 위해 GLFW를 사용하는 측에서 정의되어야 합니다. GLFW 3.4는 Linux에서 Wayland를 지원하며, 기본적으로 X11과 Wayland 모두를 위한 백엔드를 빌드합니다. 따라서 빌드를 성공적으로 진행하려면 두 플랫폼 모두에 필요한 패키지와 일부 Wayland 및 CMake 의존성이 필요합니다. 특정 백엔드를 사용하고자 할 경우, 런타임에서 `GLFW_PLATFORM`을 통해 지정할 수 있습니다.
 
-Although it is quite feasible to have multiple windows in a Vulkan-GLFW application, that is out of scope for this guide. For our purposes GLFW (the library) and a single window are a monolithic unit - initialized and destroyed together. This can be encapsulated in a `std::unique_ptr` with a custom deleter, especially since GLFW returns an opaque pointer (`GLFWwindow*`).
+Vulkan-GLFW 애플리케이션에서 다중 창을 사용할 수는 있지만, 이 가이드에서는 다루지 않습니다. 여기서는 GLFW 라이브러리와 단일 창을 하나의 단위로 보고 함께 초기화하고 해제하는 방식으로 구성합니다. GLFW는 구조를 알 수 없는(Opaque) 포인터 `GLFWwindow*`를 반환하므로, 이를 `std::unique_ptr`과 커스텀 파괴자를 사용해 캡슐화하는 것이 적절합니다.
 
 ```cpp
 // window.hpp
@@ -24,7 +24,7 @@ void Deleter::operator()(GLFWwindow* window) const noexcept {
 }
 ```
 
-GLFW can create fullscreen and borderless windows, but we will stick to a standard window with decorations. Since we cannot do anything useful if we are unable to create a window, all other branches throw a fatal exception (caught in main).
+GLFW는 전체 화면이나 테두리 없는 창을 만들 수 있지만, 이 가이드에서는 일반 창을 사용합니다. 창을 생성하지 못하면 이후 작업이 불가능하기 때문에, 실패한 경우에는 모두 치명적인 예외를 발생시키도록 되어 있습니다.
 
 ```cpp
 auto glfw::create_window(glm::ivec2 const size, char const* title) -> Window {
@@ -48,16 +48,16 @@ auto glfw::create_window(glm::ivec2 const size, char const* title) -> Window {
 }
 ```
 
-`App` can now store a `glfw::Window` and keep polling it in `run()` until it gets closed by the user. We will not be able to draw anything to the window for a while, but this is the first step in that journey.
+`App`은 이제 `glfw::Window`를 멤버로 저장해 사용자가 창을 닫을 때 까지 `run()`에서 이를 사용할 수 있습니다. 아직은 창에 아무것도 그릴 수 없지만, 이는 앞으로의 과정을 시작하는 첫 단계입니다.
 
-Declare it as a private member:
+이를 private 멤버로 선언합니다.
 
 ```cpp
 private:
   glfw::Window m_window{};
 ```
 
-Add some private member functions to encapsulate each operation:
+각 작업을 캡슐화하는 몇 가지 private 멤버 함수를 추가합니다.
 
 ```cpp
 void create_window();
@@ -65,7 +65,7 @@ void create_window();
 void main_loop();
 ```
 
-Implement them and call them in `run()`:
+이를 구현하고 `run()`에서 호출합니다.
 
 ```cpp
 void App::run() {
@@ -85,5 +85,4 @@ void App::main_loop() {
 }
 ```
 
-> On Wayland you will not even see a window yet: it is only shown _after_ the application presents a framebuffer to it.
-
+> Wayland에서는 아직 창이 보이지 않을 수 있습니다. 창은 애플리케이션이 프레임버퍼를 렌더링한 후에야 화면에 표시됩니다.

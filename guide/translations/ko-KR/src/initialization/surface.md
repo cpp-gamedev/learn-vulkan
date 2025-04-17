@@ -1,8 +1,8 @@
 # Vulkan Surface
 
-Being platform agnostic, Vulkan interfaces with the WSI via the [`VK_KHR_surface` extension](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_surface.html). A [Surface](https://docs.vulkan.org/guide/latest/wsi.html#_surface) enables displaying images on the window through the presentation engine.
+Vulkan은 플랫폼과 독립적으로 작동하기 위해 [`VK_KHR_surface` 확장](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_surface.html)을 통해 WSI와 상호작용합니다. [Surface](https://docs.vulkan.org/guide/latest/wsi.html#_surface)는 프레젠테이션 엔진을 통해 창에 이미지를 표시할 수 있게 해줍니다.
 
-Add another helper function in `window.hpp/cpp`:
+`window.hpp/cpp`에 또 다른 함수를 추가합시다.
 
 ```cpp
 auto glfw::create_surface(GLFWwindow* window, vk::Instance const instance)
@@ -17,7 +17,7 @@ auto glfw::create_surface(GLFWwindow* window, vk::Instance const instance)
 }
 ```
 
-Add a `vk::UniqueSurfaceKHR` member to `App` after `m_instance`, and create the surface:
+`App`에 `vk::UniqueSurfaceKHR`이라는 멤버를 `m_instance` 이후에 추가하고 Surface를 생성합니다.
 
 ```cpp
 void App::create_surface() {

@@ -1,8 +1,8 @@
 # Vulkan Device
 
-A [Vulkan Device](https://docs.vulkan.org/spec/latest/chapters/devsandqueues.html#devsandqueues-devices) is a logical instance of a Physical Device, and will the primary interface for everything Vulkan now onwards. [Vulkan Queues](https://docs.vulkan.org/spec/latest/chapters/devsandqueues.html#devsandqueues-queues) are owned by the Device, we will need one from the queue family stored in the `Gpu` to submit recorded command buffers. We also need to explicitly declare all features we want to use, eg [Dynamic Rendering](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_dynamic_rendering.html) and [Synchronization2](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_synchronization2.html).
+[Device](https://docs.vulkan.org/spec/latest/chapters/devsandqueues.html#devsandqueues-devices)는 Physical Device의 논리적 인스턴스이며, 이후의 모든 Vulkan 작업에서 주요 인터페이스 역할을 하게 됩니다. [Queue](https://docs.vulkan.org/spec/latest/chapters/devsandqueues.html#devsandqueues-queues)는 Device가 소유하는 것으로, `Gpu` 구조체에 저장된 큐 패밀리에서 하나를 가져와 기록된 커맨드 버퍼를 제출하는 데 사용할 것입니다. 또한 사용하기를 원하는 [Dynamic Rendering](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_dynamic_rendering.html) 과 [Synchronization2](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_synchronization2.html)같은 기능들을 명시적으로 선언해야 합니다.
 
-Setup a `vk::QueueCreateInfo` object:
+`vk::QueueCreateInfo`객체를 설정합시다.
 
 ```cpp
 auto queue_ci = vk::DeviceQueueCreateInfo{};
@@ -13,7 +13,7 @@ queue_ci.setQueueFamilyIndex(m_gpu.queue_family)
   .setQueuePriorities(queue_priorities_v);
 ```
 
-Setup the core device features:
+핵심 디바이스 기능을 설정합니다.
 
 ```cpp
 // nice-to-have optional core features, enable if GPU supports them.
@@ -24,7 +24,7 @@ enabled_features.samplerAnisotropy = m_gpu.features.samplerAnisotropy;
 enabled_features.sampleRateShading = m_gpu.features.sampleRateShading;
 ```
 
-Setup the additional features, using `setPNext()` to chain them:
+추가 기능을 설정하기 위해 `setPNext()`를 사용해 묶습니다.
 
 ```cpp
 // extra features that need to be explicitly enabled.
@@ -37,7 +37,7 @@ auto dynamic_rendering_feature =
 sync_feature.setPNext(&dynamic_rendering_feature);
 ```
 
-Setup a `vk::DeviceCreateInfo` object:
+`vk::DeviceCreateInfo` 구조체를 설정합니다.
 
 ```cpp
 auto device_ci = vk::DeviceCreateInfo{};
@@ -50,7 +50,7 @@ device_ci.setPEnabledExtensionNames(extensions_v)
   .setPNext(&sync_feature);
 ```
 
-Declare a `vk::UniqueDevice` member after `m_gpu`, create it, and initialize the dispatcher against it:
+`vk::UniqueDevice` 멤버를 `m_gpu` 이후에 선언하고, 이를 생성한 다음 디스패쳐를 해당 디바이스로 다시 초기화합니다.
 
 ```cpp
 m_device = m_gpu.device.createDeviceUnique(device_ci);
@@ -58,7 +58,7 @@ m_device = m_gpu.device.createDeviceUnique(device_ci);
 VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_device);
 ```
 
-Declare a `vk::Queue` member (order doesn't matter since it's just a handle, the actual Queue is owned by the Device) and initialize it:
+`vk::Queue` 멤버도 선언하고 초기화합니다(순서는 중요하지 않습니다. 이는 단순한 핸들이며 실제 큐는 디바이스가 관리하기 때문입니다).
 
 ```cpp
 static constexpr std::uint32_t queue_index_v{0};

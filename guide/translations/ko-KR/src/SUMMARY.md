@@ -1,8 +1,8 @@
 # Summary
 
-[Introduction](README.md)
+[소개](README.md)
 
-# Basics
+# 기초
 
 - [Getting Started](getting_started/README.md)
   - [Project Layout](getting_started/project_layout.md)
@@ -34,7 +34,7 @@
   - [Drawing a Triangle](shader_objects/drawing_triangle.md)
   - [Graphics Pipelines](shader_objects/pipelines.md)
 
-# Shader Resources
+# 셰이더 자원
 
 - [Memory Allocation](memory/README.md)
   - [Vulkan Memory Allocator](memory/vma.md)
