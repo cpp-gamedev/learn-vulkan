@@ -1,6 +1,6 @@
-# Render Sync
+# 렌더 싱크
 
-Create a new header `resource_buffering.hpp`:
+새로운 헤더 `resource_buffering.hpp`를 생성합니다.
 
 ```cpp
 // Number of virtual frames.
@@ -11,7 +11,7 @@ template <typename Type>
 using Buffered = std::array<Type, buffering_v>;
 ```
 
-Add a private `struct RenderSync` to `App`:
+`App`에 private 멤버 `struct RenderSync`를 추가합니다.
 
 ```cpp
 struct RenderSync {
@@ -26,7 +26,7 @@ struct RenderSync {
 };
 ```
 
-Add the new members associated with the Swapchain loop:
+스왑체인 루프와 관련있는 새로운 멤버를 추가합니다.
 
 ```cpp
 // command pool for all render Command Buffers.
@@ -37,7 +37,7 @@ Buffered<RenderSync> m_render_sync{};
 std::size_t m_frame_index{};
 ```
 
-Add, implement, and call the create function:
+생성 함수를 추가하고, 구현한 다음 호출합니다.
 
 ```cpp
 void App::create_render_sync() {

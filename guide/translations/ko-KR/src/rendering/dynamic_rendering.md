@@ -1,8 +1,8 @@
-# Dynamic Rendering
+# 동적 렌더링
 
-Dynamic Rendering enables us to avoid using Render Passes, which are quite a bit more verbose (but also generally more performant on tiled GPUs). Here we tie together the Swapchain, Render Sync, and rendering. We are not ready to actually render anything yet, but can clear the image to a particular color.
+동적 렌더링을 활성화하면 비교적 복잡한 렌더 패스를 사용하지 않아도 됩니다. 다만 렌더 패스는 타일 기반 GPU에서 조금 더 이점을 갖습니다. 여기서는 스왑체인, 렌더 싱크, 그리고 렌더링 자체를 하나로 묶는 작업을 진행하겠습니다. 아직 실제로 화면에 무언가를 렌더링할 준비가 된 것은 아니지만, 특정 색상으로 이미지를 초기화할 수는 있습니다.
 
-Add these new members to `App`:
+아래와 같은 멤버를 `App`에 추가하겠습니다.
 
 ```cpp
 auto acquire_render_target() -> bool;
@@ -17,7 +17,7 @@ glm::ivec2 m_framebuffer_size{};
 std::optional<RenderTarget> m_render_target{};
 ```
 
-The main loop can now use these to implement the Swapchain and rendering loop:
+이제 메인 루프는 이 멤버들을 활용하여 스왑체인과 렌더링 루프를 구현할 수 있습니다.
 
 ```cpp
 while (glfwWindowShouldClose(m_window.get()) == GLFW_FALSE) {
@@ -31,7 +31,7 @@ while (glfwWindowShouldClose(m_window.get()) == GLFW_FALSE) {
 }
 ```
 
-Before acquiring a Swapchain image, we need to wait for the current frame's fence. If acquisition is successful, reset the fence ('un'signal it):
+스왑체인 이미지를 받아오기 전에, 현재 프레임의 펜스를 대기해야 합니다. 이미지를 받아오는 것이 성공하면 해당 펜스를 리셋(unsignal)합니다.
 
 ```cpp
 auto App::acquire_render_target() -> bool {
@@ -67,7 +67,7 @@ auto App::acquire_render_target() -> bool {
 }
 ```
 
-Since the fence has been reset, a queue submission must be made that signals it before continuing, otherwise the app will deadlock on the next wait (and eventually throw after 3s). Begin Command Buffer recording:
+펜스가 리셋되었기 때문에, 다음 동작을 진행하기 전에 해당 펜스를 signal하도록 반드시 큐에 커맨드 버퍼가 제출되어야 합니다. 그렇지 않으면 다음 루프에서 펜스를 기다리는 과정에서 교착 상태에 빠지고, 결국 3초 후 예외가 발생하게 됩니다. 이제 커맨드 버퍼 기록을 시작하겠습니다.
 
 ```cpp
 auto App::begin_frame() -> vk::CommandBuffer {
@@ -81,7 +81,7 @@ auto App::begin_frame() -> vk::CommandBuffer {
 }
 ```
 
-Transition the image for rendering, ie Attachment Optimal layout. Set up the image barrier and record it:
+렌더링에 사용할 이미지의 레이아웃을 AttachmentOptimal 레이아웃으로 전환합니다. 이를 위해 이미지 배리어를 설정하고 커맨드 버퍼에 기록합니다.
 
 ```cpp
 void App::transition_for_render(vk::CommandBuffer const command_buffer) const {
@@ -102,7 +102,7 @@ void App::transition_for_render(vk::CommandBuffer const command_buffer) const {
 }
 ```
 
-Create a Rendering Attachment Info using the acquired image as the color target. We use a red clear color, make sure the Load Op clears the image, and Store Op stores the results (currently just the cleared image). Set up a Rendering Info object with the color attachment and the entire image as the render area. Finally, execute the render:
+받아온 이미지를 색상 타겟으로 사용하는 RenderingAttachmentInfo를 생성합니다. 빨간 색을 초기화 색상으로 사용하고, LoadOp가 이미지를 초기화하며, StoreOp는 결과를 담도록 해야 합니다(현재는 초기화된 이미지만 저장합니다). 이 colorAttachment와 전체 이미지를 렌더링 영역으로 설정한 RenderingInfo 구조체를 생성합니다. 마지막으로 렌더링을 실행합니다.
 
 ```cpp
 void App::render(vk::CommandBuffer const command_buffer) {
@@ -126,7 +126,7 @@ void App::render(vk::CommandBuffer const command_buffer) {
 }
 ```
 
-Transition the image for presentation:
+렌더링이 끝나면 이미지를 표시하기 위해 레이아웃을 전환합니다.
 
 ```cpp
 void App::transition_for_present(vk::CommandBuffer const command_buffer) const {
@@ -147,7 +147,7 @@ void App::transition_for_present(vk::CommandBuffer const command_buffer) const {
 }
 ```
 
-End the command buffer and submit it. The `draw` Semaphore will be signaled by the Swapchain when the image is ready, which will trigger this command buffer's execution. It will signal the `present` Semaphore and `drawn` Fence on completion, with the latter being waited on the next time this virtual frame is processed. Finally, we increment the frame index, pass the `present` semaphore as the one for the subsequent present operation to wait on:
+커맨드 버퍼를 끝내고(End) 이를 제출합니다. 스왑체인 이미지를 사용할 준비가 되면 `draw`세마포어가 시그널 되고, 이로 인해 커맨드 버퍼가 실행됩니다. 렌더링이 완료되면 `present` 세마포어와 `drawn` 펜스가 시그널됩니다. 이후 동일한 가상 프레임이 다시 처리될 때 이 펜스를 기다리게 됩니다. 마지막으로 프레임 인덱스를 증가시키고, 다음 표시 작업이 대기할 수 있도록 `present` 세마포어를 전달합니다.
 
 ```cpp
 void App::submit_and_present() {
@@ -183,19 +183,19 @@ void App::submit_and_present() {
 }
 ```
 
-> Wayland users: congratulaions, you can finally see and interact with the window!
+> Wayland 사용자라면 이제 마침내 창과 상호작용할 수 있습니다!
 
 ![Cleared Image](./dynamic_rendering_red_clear.png)
 
-## Render Doc on Wayland
+## Wayland에서의 RenderDoc
 
-At the time of writing, RenderDoc doesn't support inspecting Wayland applications. Temporarily force X11 (XWayland) by calling `glfwInitHint()` before `glfwInit()`:
+이 글을 작성하는 시점에서는 RenderDoc이 Wayland 애플리케이션을 지원하지 않습니다. `glfwInit()` 이전에 `glfwInitHint()`를 호출하여 임시로 X11(XWayland)를 사용하도록 강제할 수 있습니다.
 
 ```cpp
 glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
 ```
 
-Setting up a command line option to conditionally call this is a simple and flexible approach: just set that argument in RenderDoc itself and/or pass it whenever an X11 backend is desired:
+커맨드라인 옵션을 활용해 이 설정을 조건적으로 적용하는 것이 간단하고 유연한 방식입니다. RenderDoc에서 해당 인자를 설정하거나, X11 백엔드를 사용하고자 할 때마다 넘겨주는 식으로 처리하면 됩니다.
 
 ```cpp
 // main.cpp

@@ -1,13 +1,14 @@
-# Swapchain Update
+# 스왑체인 업데이트
 
 Swapchain acquire/present operations can have various results. We constrain ourselves to the following:
+스왑체인에서 이미지를 받아오고 표시하는 작업은 다양한 결과를 반환할 수 있습니다. 우리는 다음과 같은 경우에 한정하여 처리합니다.
 
-- `eSuccess`: all good
-- `eSuboptimalKHR`: also all good (not an error, and this is unlikely to occur on a desktop)
-- `eErrorOutOfDateKHR`: Swapchain needs to be recreated
-- Any other `vk::Result`: fatal/unexpected error
+- `eSuccess` : 문제가 없습니다.
+- `eSuboptimalKHR` : 역시 문제가 없습니다(에러는 아니며, 데스크탑 환경에서는 드물게 발생합니다).
+- `eErrorOutOfDateKHR` : 스왑체인을 재생성해야 합니다.
+- 그 외의 모든 `vk::Result` : 치명적이거나 예기치 않은 오류입니다.
 
-Expressing as a helper function in `swapchain.cpp`:
+`swapchain.cpp`에 함수를 생성합시다.
 
 ```cpp
 auto needs_recreation(vk::Result const result) -> bool {
@@ -21,7 +22,7 @@ auto needs_recreation(vk::Result const result) -> bool {
 }
 ```
 
-We also want to return the Image, Image View, and size upon successful acquisition of the underlying Swapchain Image. Wrapping those in a `struct`:
+스왑체인으로부터 이미지를 성공적으로 받아오면 이미지와 이미지 뷰, 그리고 크기를 반환해야 합니다. 이를 `struct`로 감싸겠습니다.
 
 ```cpp
 struct RenderTarget {
@@ -31,9 +32,9 @@ struct RenderTarget {
 };
 ```
 
-VulkanHPP's primary API throws if the `vk::Result` corresponds to an error (based on the spec). `eErrorOutOfDateKHR` is technically an error, but it's quite possible to get it when the framebuffer size doesn't match the Swapchain size. To avoid having to deal with exceptions here, we use the alternate API for the acquire and present calls (overloads distinguished by pointer arguments and/or out parameters, and returning a `vk::Result`).
+VulkanHPP의 기본 API는 `vk::Result`가 오류에 해당되면 (사양에 따라) 예외를 던집니다. `eErrorOutOfDateKHR`은 기술적으로는 오류이지만, 프레임버퍼와 스왑체인의 크기가 일치하지 않을 때 일어날 수 있습니다. 이러한 예외 처리를 피하기 위해, 우리는 포인터 인자 또는 출력 인자를 사용하는 오버로드 버전 API를 사용하여 `vk::Result`를 직접 반환받는 방식으로 대체하겠습니다.
 
-Implementing the acquire operation:
+이미지를 가져오는 함수를 작성하겠습니다.
 
 ```cpp
 auto Swapchain::acquire_next_image(vk::Semaphore const to_signal)
@@ -56,7 +57,7 @@ auto Swapchain::acquire_next_image(vk::Semaphore const to_signal)
 }
 ```
 
-Similarly, present:
+표시하는 함수도 마찬가지입니다.
 
 ```cpp
 auto Swapchain::present(vk::Queue const queue, vk::Semaphore const to_wait)
@@ -73,7 +74,7 @@ auto Swapchain::present(vk::Queue const queue, vk::Semaphore const to_wait)
 }
 ```
 
-It is the responsibility of the user (`class App`) to recreate the Swapchain on receiving `std::nullopt` / `false` return values for either operation. Users will also need to transition the layouts of the returned images between acquire and present operations. Add a helper to assist in that process, and extract the Image Subresource Range out as a common constant:
+각 작업에서 `std::nullopt` 혹은 `false`가 반환될 경우, 스왑체인을 재생성하는 것은 사용자(`class App`)의 책임입니다. 사용자는 또한 받아오는 것과 표시하는 작업 사이에 이미지의 레이아웃을 전환해야 합니다. 이 과정을 돕는 함수를 추가하고 공통 상수로 사용할 수 있도록 ImageSubresourceRange 분리해 정의합니다.
 
 ```cpp
 constexpr auto subresource_range_v = [] {
