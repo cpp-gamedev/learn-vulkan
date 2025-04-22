@@ -1,6 +1,6 @@
-# ImGui Integration
+# ImGui 통합
 
-Update `Swapchain` to expose its image format:
+`Swapchain`이 이미지 포맷을 외부에 노출하도록 수정하겠습니다.
 
 ```cpp
 [[nodiscard]] auto get_format() const -> vk::Format {
@@ -8,7 +8,7 @@ Update `Swapchain` to expose its image format:
 }
 ```
 
-`class App` can now store a `std::optional<DearImGui>` member and add/call its create function:
+`class App`은 이제 `std::optional<DearImGui>` 멤버를 담을 수 있으며, 이를 생성하는 함수를 추가하고 호출할 수 있습니다.
 
 ```cpp
 void App::create_imgui() {
@@ -27,7 +27,7 @@ void App::create_imgui() {
 }
 ```
 
-Start a new ImGui frame after resetting the render fence, and show the demo window:
+렌더 패스를 리셋한 이후에 새로운 ImGui 프레임을 시작하고, 데모 창을 띄워봅시다.
 
 ```cpp
 m_device->resetFences(*render_sync.drawn);
@@ -40,9 +40,9 @@ ImGui::ShowDemoWindow();
 command_buffer.endRendering();
 ```
 
-ImGui doesn't draw anything here (the actual draw command requires the Command Buffer), it's just a good customization point for all higher level logic.
+ImGui는 이 시점에서는 아무것도 그리지 않습니다(실제 그리기 명령은 커맨드 버퍼가 필요합니다). 이 부분은 상위 로직을 구성하기 위한 커스터마이징 지점입니다.
 
-We use a separate render pass for Dear ImGui, again for isolation, and to enable us to change the main render pass later, eg by adding a depth buffer attachment (`DearImGui` is setup assuming its render pass will only use a single color attachment).
+우리는 Dear ImGui를 위한 별도의 렌더 패스를 사용합니다. 이는 코드의 분리를 위한 목적도 있고, 메인 렌더 패스를 나중에 깊이 버퍼를 추가하는 것과 같은 상황에 변경할 수 있도록 하기 위함입니다 `DearImGui`는 하나의 색상 어태치먼트만 사용하는 전용 렌더 패스를 설정한다고 간주합니다.
 
 ```cpp
 m_imgui->end_frame();

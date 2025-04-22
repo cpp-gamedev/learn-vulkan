@@ -1,6 +1,6 @@
 # class DearImGui
 
-Dear ImGui has its own initialization and loop, which we encapsulate into `class DearImGui`:
+Dear ImGui는 자체적인 초기화 과정과 렌더링 루프를 가지고 있으며, 이를 `class DearImGui`로 캡슐화하겠습니다.
 
 ```cpp
 struct DearImGuiCreateInfo {
@@ -38,7 +38,7 @@ class DearImGui {
 };
 ```
 
-In the constructor, we start by creating the ImGui Context, loading Vulkan functions, and initializing GLFW for Vulkan:
+생성자에서는 ImGui 컨텍스트를 생성하고, Vulkan 함수를 불러와 Vulkan을 위한 GLFW 초기화를 진행합니다
 
 ```cpp
 IMGUI_CHECKVERSION();
@@ -57,7 +57,7 @@ if (!ImGui_ImplGlfw_InitForVulkan(create_info.window, true)) {
 }
 ```
 
-Then initialize Dear ImGui for Vulkan:
+그 후 Vulkan용 Dear ImGui를 초기화합니다.
 
 ```cpp
 auto init_info = ImGui_ImplVulkan_InitInfo{};
@@ -83,7 +83,7 @@ if (!ImGui_ImplVulkan_Init(&init_info)) {
 ImGui_ImplVulkan_CreateFontsTexture();
 ```
 
-Since we are using an sRGB format and Dear ImGui is not color-space aware, we need to convert its style colors to linear space (so that they shift back to the original values by gamma correction):
+sRGB 포맷을 사용하고 있지만 Dear ImGui는 색상 공간에 대한 인식이 없기 때문에, 스타일 색상들을 선형 공간으로 변환해주어야 합니다. 이렇게 하면 감마 보정 과정을 통해 의도한 색상이 출력됩니다.
 
 ```cpp
 ImGui::StyleColorsDark();
@@ -96,7 +96,7 @@ for (auto& colour : ImGui::GetStyle().Colors) {
 ImGui::GetStyle().Colors[ImGuiCol_WindowBg].w = 0.99f; // more opaque
 ```
 
-Finally, create the deleter and its implementation:
+마지막으로 삭제자(Deleter)를 생성하고 구현합니다.
 
 ```cpp
 m_device = Scoped<vk::Device, Deleter>{create_info.device};
@@ -111,7 +111,7 @@ void DearImGui::Deleter::operator()(vk::Device const device) const {
 }
 ```
 
-The remaining functions are straightforward:
+이 외의 나머지 함수들은 비교적 단순합니다.
 
 ```cpp
 void DearImGui::new_frame() {

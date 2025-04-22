@@ -1,3 +1,3 @@
 # Dear ImGui
 
-Dear ImGui does not have native CMake support, and while adding the sources to the executable is an option, we will add it as an external library target: `imgui` to isolate it (and compile warnings etc) from our own code. This requires some changes to the `ext` target structure, since `imgui` will itself need to link to GLFW and Vulkan-Headers, have `VK_NO_PROTOTYPES` defined, etc. `learn-vk-ext` then links to `imgui` and any other libraries (currently only `glm`). We are using Dear ImGui v1.91.9, which has decent support for Dynamic Rendering.
+Dear ImGui는 네이티브 CMake를 지원하지 않기 때문에, 소스를 실행 파일에 직접 추가하는 방법도 있지만, 컴파일 경고 등에서 우리 코드와 분리하기 위해 외부 라이브러리 타겟인 `imgui`로 추가할 예정입니다. 이를 위해 `imgui`는 GLFW 및 Vulkan-Headers에 연결되어야 하고, `VK_NO_PROTOTYPES`도 정의되어야 하므로 `ext` 타겟 구조에 약간의 변경이 필요합니다. 이후 `learn-vk-ext`는 `imgui` 및 기타 라이브러리들(현재는 `glm`만 있음)과 연결됩니다. 우리는 동적 렌더링을 지원하는 Dear ImGui v1.91.9 버전을 사용할 예정입니다.
