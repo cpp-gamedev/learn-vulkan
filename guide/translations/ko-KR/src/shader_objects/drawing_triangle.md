@@ -1,6 +1,6 @@
-# Drawing a Triangle
+# 삼각형 그리기
 
-Add a `ShaderProgram` to `App` and its create function:
+`App` 클래스에 `ShaderProgram`과 이를 생성하는 함수를 추가합니다.
 
 ```cpp
 [[nodiscard]] auto asset_path(std::string_view uri) const -> fs::path;
@@ -12,7 +12,7 @@ void create_shader();
 std::optional<ShaderProgram> m_shader{};
 ```
 
-Implement and call `create_shader()` (and `asset_path()`):
+`asset_path()`와 `create_shader()`를 구현하고 호출합니다.
 
 ```cpp
 void App::create_shader() {
@@ -33,7 +33,7 @@ auto App::asset_path(std::string_view const uri) const -> fs::path {
 }
 ```
 
-Before `render()` grows to an unwieldy size, extract the higher level logic into two member functions:
+`render()`가 걷잡을 수 없이 커지기 전에, 고수준 로직을 두 멤버 함수로 분리합니다.
 
 ```cpp
 // ImGui code goes here.
@@ -54,7 +54,7 @@ draw(command_buffer);
 command_buffer.endRendering();
 ```
 
-We can now bind the shader and use it to draw the triangle in the shader. Making `draw()` `const` forces us to ensure no `App` state is changed:
+이제 셰이더를 바인딩하고 이를 삼각형을 그리는 데 사용할 수 있습니다. `draw()`함수를 `const`로 만들어 `App`을 건드리지 않도록 합니다.
 
 ```cpp
 void App::draw(vk::CommandBuffer const command_buffer) const {
@@ -66,7 +66,7 @@ void App::draw(vk::CommandBuffer const command_buffer) const {
 
 ![White Triangle](./white_triangle.png)
 
-Updating the shaders to use interpolated RGB on each vertex:
+셰이더를 각 정점에 대해 보간된 RGB를 사용하도록 업데이트합니다. 
 
 ```glsl
 // shader.vert
@@ -91,22 +91,22 @@ layout (location = 0) in vec3 in_color;
 out_color = vec4(in_color, 1.0);
 ```
 
-> Make sure to recompile both the SPIR-V shaders in assets/.
+> `assets/`에 있는 두 SPIR-V 파일을 다시 컴파일하는 것을 잊지 마세요. 
 
-And a black clear color:
+그리고 초기화 색상을 검은 색으로 설정합니다.
 
 ```cpp
 // ...
 .setClearValue(vk::ClearColorValue{0.0f, 0.0f, 0.0f, 1.0f});
 ```
 
-Gives us the renowned Vulkan sRGB triangle:
+이제 Vulkan에서 sRGB 포맷으로 표현되는 삼각형을 볼 수 있습니다.
 
 ![sRGB Triangle](./srgb_triangle.png)
 
-## Modifying Dynamic State
+## 동적 상태 변경하기
 
-We can use an ImGui window to inspect / tweak some pipeline state:
+ImGui 창을 사용해 파이프라인 상태를 관찰하거나 일부 설정을 변경할 수 있습니다.
 
 ```cpp
 ImGui::SetNextWindowSize({200.0f, 100.0f}, ImGuiCond_Once);

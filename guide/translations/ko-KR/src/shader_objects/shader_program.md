@@ -1,6 +1,6 @@
-# Shader Program
+# 셰이더 프로그램
 
-To use Shader Objects we need to enable the corresponding feature and extension during device creation:
+셰이더 오브젝트를 사용하려면 디바이스 생성 시 대응되는 기능과 확장을 활성화해야 합니다.
 
 ```cpp
 auto shader_object_feature =
@@ -15,9 +15,10 @@ static constexpr auto extensions_v = std::array{
 };
 ```
 
-## Emulation Layer
+## 에뮬레이션 레이어
 
-It's possible device creation now fails because the driver or physical device does not support `VK_EXT_shader_object` (especially likely with Intel). Vulkan SDK provides a layer that implements this extension: [`VK_LAYER_KHRONOS_shader_object`](https://github.com/KhronosGroup/Vulkan-ExtensionLayer/blob/main/docs/shader_object_layer.md). Adding this layer to the Instance Create Info should unblock usage of this feature:
+현재 사용중인 드라이버나 물리 디바이스가 `VK_EXT_shader_object`를 지원하지 않을 수 있기 때문에(특히 인텔에서 자주 발생합니다) 디바이스 생성이 실패할 수 있습니다. Vulkan SDK는 이 확장을 구현하는 레이어 [`VK_LAYER_KHRONOS_shader_object`](https://github.com/KhronosGroup/Vulkan-ExtensionLayer/blob/main/docs/shader_object_layer.md)를 제공합니다. 이 레이어를 InstanceCreateInfo에 추가하면 해당 기능을 사용할 수 있습니다.
+
 
 ```cpp
 // ...
@@ -32,10 +33,10 @@ m_instance = vk::createInstanceUnique(instance_ci);
 ```
 
 <div class="warning">
-This layer <em>is not</em> part of standard Vulkan driver installs, you must package the layer with the application for it to run on environments without Vulkan SDK / Vulkan Configurator. Read more <a href="https://docs.vulkan.org/samples/latest/samples/extensions/shader_object/README.html#_emulation_layer">here</a>.
+이 레이어는 표준 Vulkan 드라이버 설치에 포함되어 있지 <em>않기</em> 때문에, Vulkan SDK나 Vulkan Configurator가 없는 환경에서도 실행할 수 있도록 애플리케이션과 함께 패키징해야 합니다. 자세한 내용은<a href="https://docs.vulkan.org/samples/latest/samples/extensions/shader_object/README.html#_emulation_layer">여기</a>를 참고하세요.
 </div>
 
-Since desired layers may not be available, we can set up a defensive check:
+원하는 레이어가 사용 불가능할 수 있으므로, 이를 확인하는 코드를 추가하는 것이 좋습니다.
 
 ```cpp
 [[nodiscard]] auto get_layers(std::span<char const* const> desired)
@@ -64,9 +65,9 @@ instance_ci.setPEnabledLayerNames(layers);
 
 ## `class ShaderProgram`
 
-We will encapsulate both vertex and fragment shaders into a single `ShaderProgram`, which will also bind the shaders before a draw, and expose/set various dynamic states.
+정점 셰이더와 프래그먼트 셰이더를 하나의 `ShaderProgram`으로 캡슐화하여, 그리기 전에 셰이더를 바인딩하고 다양한 동적 상태를 설정할 수 있도록 하겠습니다.
 
-In `shader_program.hpp`, first add a `ShaderProgramCreateInfo` struct:
+`shader_program.hpp`에서 가장 먼저 `ShaderProgramCreateInfo` 구조체를 추가합니다.
 
 ```cpp
 struct ShaderProgramCreateInfo {
@@ -77,9 +78,9 @@ struct ShaderProgramCreateInfo {
 };
 ```
 
-> Descriptor Sets and their Layouts will be covered later.
+> 디스크립터 셋과 레이아웃은 이후에 다루겠습니다.
 
-Start with a skeleton definition:
+간단한 형태의 정의부터 시작합니다.
 
 ```cpp
 class ShaderProgram {
@@ -95,7 +96,7 @@ class ShaderProgram {
 };
 ```
 
-The definition of the constructor is fairly straightforward:
+생성자의 정의는 꽤 단순합니다.
 
 ```cpp
 ShaderProgram::ShaderProgram(CreateInfo const& create_info) {
@@ -129,7 +130,7 @@ ShaderProgram::ShaderProgram(CreateInfo const& create_info) {
 }
 ```
 
-Expose some dynamic states via public members:
+몇 가지 동적 상태를 public 멤버를 통해 나타냅니다.
 
 ```cpp
 static constexpr auto color_blend_equation_v = [] {
@@ -150,7 +151,7 @@ vk::ColorBlendEquationEXT color_blend_equation{color_blend_equation_v};
 vk::CompareOp depth_compare_op{vk::CompareOp::eLessOrEqual};
 ```
 
-Encapsulate booleans into bit flags:
+불 값을 비트 플래그로 캡슐화합니다.
 
 ```cpp
 // bit flags for various binary states.
@@ -167,7 +168,7 @@ static constexpr auto flags_v = AlphaBlend | DepthTest;
 std::uint8_t flags{flags_v};
 ```
 
-There is one more piece of pipeline state needed: vertex input. We will consider this to be constant per shader and store it in the constructor:
+파이프라인 상태에 필요한 요소가 하나 남아있습니다. 정점 입력입니다. 이는 셰이더마다 고정된 값이 될 것이므로 생성자에 저장할 것입니다.
 
 ```cpp
 // shader_program.hpp
@@ -198,14 +199,14 @@ ShaderProgram::ShaderProgram(CreateInfo const& create_info)
 }
 ```
 
-The API to bind will take the command buffer and the framebuffer size (to set the viewport and scissor):
+바인딩할 API는 Viewport와 Scissor 설정을 위해 커맨드 버퍼와 프레임 버퍼 크기를 받습니다
 
 ```cpp
 void bind(vk::CommandBuffer command_buffer,
           glm::ivec2 framebuffer_size) const;
 ```
 
-Add helper member functions and implement `bind()` by calling them in succession:
+멤버 함수를 추가하고 순차적으로 이를 호출하여 `bind()`를 구현합니다.
 
 ```cpp
 static void set_viewport_scissor(vk::CommandBuffer command_buffer,
@@ -228,7 +229,7 @@ void ShaderProgram::bind(vk::CommandBuffer const command_buffer,
 }
 ```
 
-Implementations are long but straightforward:
+구현은 길지만 꽤 단순합니다.
 
 ```cpp
 namespace {

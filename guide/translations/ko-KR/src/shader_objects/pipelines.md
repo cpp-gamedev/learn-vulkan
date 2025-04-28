@@ -1,10 +1,10 @@
-# Graphics Pipelines
+# 그래픽스 파이프라인
 
-This page describes the usage of Graphics Pipelines _instead of_ Shader Objects. While the guide assumes Shader Object usage, not much should change in the rest of the code if you instead choose to use Graphics Pipelines. A notable exception is the setup of Descriptor Set Layouts: with pipelines it needs to be specified as part of the Pipeline Layout, whereas with Shader Objects it is part of each ShaderEXT's CreateInfo.
+여기서는 셰이더 오브젝트 대신 그래픽스 파이프라인을 사용하는 방법을 설명합니다. 이 가이드는 셰이더 오브젝트를 사용한다고 가정하지만, 그래픽스 파이프라인을 대신 사용하더라도 나머지 코드에는 큰 변화가 없을 것입니다. 다만, 알아둬야할 예외 사항은 디스크립터 셋 레이아웃 설정 방식입니다. 셰이더 오브젝트에서는 ShaderEXT의 CreateInfo에 포함되지만, 파이프라인을 사용할 경우 파이프라인 레이아웃에 지정해야 합니다.
 
-## Pipeline State
+## 파이프라인 상태
 
-Most dynamic state with Shader Objects is static with pipelines: specified at pipeline creation time. Pipelines also require additional parameters, like attachment formats and sample count: these will be considered constant and stored in the builder later. Expose a subset of dynamic states through a struct:
+셰이더 오브젝트는 대부분의 동적 상태를 런타임에 설정할 수 있었지만, 파이프라인에서는 파이프라인 생성 시점에 고정되기 때문에 정적입니다. 파이프라인은 또한 어태치먼트 포맷과 샘플 수 같은 추가 파라미터를 요구합니다. 이러한 값들은 상수로 간주되어 이후의 추상화 클래스에 담길 것입니다. 동적 상태의 일부를 구조체를 통해 나타냅시다.
 
 ```cpp
 // bit flags for various binary Pipeline States.
@@ -38,7 +38,7 @@ struct PipelineState {
 };
 ```
 
-Encapsulate building pipelines into a class:
+파이프라인을 구성하는 과정을 클래스로 캡슐화합시다.
 
 ```cpp
 struct PipelineBuilderCreateInfo {
@@ -64,7 +64,7 @@ class PipelineBuilder {
 };
 ```
 
-The implementation is quite verbose, splitting it into multiple functions helps a bit:
+구현은 다소 길어질 수 있으니, 여러 함수로 나누어 작성하는 것이 좋습니다.
 
 ```cpp
 // single viewport and scissor.
@@ -192,6 +192,7 @@ auto PipelineBuilder::build(vk::PipelineLayout const layout,
 ```
 
 `App` will need to store a builder, a Pipeline Layout, and the Pipeline(s):
+`App`은 빌더, 파이프라인 레이아웃, 그리고 파이프라인을 담아야 합니다.
 
 ```cpp
 std::optional<PipelineBuilder> m_pipeline_builder{};
@@ -236,7 +237,7 @@ void create_pipeline() {
 }
 ```
 
-Finally, `App::draw()`:
+마지막으로 `App::draw()`를 구현합니다.
 
 ```cpp
 void draw(vk::CommandBuffer const command_buffer) const {
