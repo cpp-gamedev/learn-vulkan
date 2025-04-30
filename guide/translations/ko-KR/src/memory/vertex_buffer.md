@@ -1,8 +1,8 @@
-# Vertex Buffer
+# 정점 버퍼
 
-The goal here is to move the hard-coded vertices in the shader to application code. For the time being we will use an ad-hoc Host `vma::Buffer` and focus more on the rest of the infrastructure like vertex attributes.
+여기서의 목표는 셰이더에 하드코딩되어 있던 정점 정보를 애플리케이션 코드로 옮기는 것입니다. 당분간은 임시로 호스트 메모리에 위치한 `vma::Buffer`를 사용하고, 정점 속성과 같은 나머지 구조에 더 집중하겠습니다.
 
-First add a new header, `vertex.hpp`:
+먼저 새로운 헤더 `vertex.hpp`를 추가합니다.
 
 ```cpp
 struct Vertex {
@@ -28,7 +28,7 @@ constexpr auto vertex_bindings_v = std::array{
 };
 ```
 
-Add the vertex attributes and bindings to the Shader Create Info:
+ShaderCreateInfo에 정점 속성과 바인딩 정보를 추가합니다.
 
 ```cpp
 // ...
@@ -46,7 +46,7 @@ auto const shader_ci = ShaderProgram::CreateInfo{
 // ...
 ```
 
-With the vertex input defined, we can update the vertex shader and recompile it:
+정점 입력이 정의되었으므로 정점 셰이더를 업데이트하고 다시 컴파일합니다.
 
 ```glsl
 #version 450 core
@@ -64,7 +64,7 @@ void main() {
 }
 ```
 
-Add a VBO (Vertex Buffer Object) member and create it:
+VBO(Vertex Buffer Object) 멤버를 추가하고, 해당 버퍼를 생성합니다.
 
 ```cpp
 void App::create_vertex_buffer() {
@@ -89,7 +89,7 @@ void App::create_vertex_buffer() {
 }
 ```
 
-Bind the VBO before recording the draw call:
+드로우 콜을 기록하기 전에 VBO를 바인딩합니다.
 
 ```cpp
 // single VBO at binding 0 at no offset.
@@ -99,6 +99,6 @@ command_buffer.bindVertexBuffers(0, m_vbo->get_raw().buffer,
 command_buffer.draw(3, 1, 0, 0);
 ```
 
-You should see the same triangle as before. But now we can use whatever set of vertices we like! The Primitive Topology is Triange List by default, so every three vertices in the array is drawn as a triangle, eg for 9 vertices: `[[0, 1, 2], [3, 4, 5], [6, 7, 8]]`, where each inner `[]` represents a triangle comprised of the vertices at those indices. Try playing around with customized vertices and topologies, use Render Doc to debug unexpected outputs / bugs.
+아마 이전과 동일한 삼각형을 볼 수 있을 것입니다. 하지만 이제는 원하는 정점 데이터를 자유롭게 사용할 수 있습니다. 프리미티브 토폴로지는 기본적으로 Triangle List로 설정하며, 정점 배열에서 매 3개의 정점이 삼각형으로 그려질 것입니다. 예를 들어 정점 9개가 `[[0, 1, 2], [3, 4, 5], [6, 7, 8]]` 있다면, 각 3개의 정점이 하나의 삼각형을 형성하게 됩니다. 정점 데이터와 토폴로지를 다양하게 바꿔보며 실험해 보세요. 예상치 못한 출력이나 버그가 발생한다면 RenderDoc을 사용해 디버깅할 수 있습니다.
 
-Host Vertex Buffers are useful for primitives that are temporary and/or frequently changing, such as UI objects. A 2D framework can use such VBOs exclusively: a simple approach would be a pool of buffers per virtual frame where for each draw a buffer is obtained from the current virtual frame's pool and vertices are copied in.
+호스트 정점 버퍼는 UI 객체처럼 임시로 쓰이거나 자주 변경되는 프리미티브에 유용합니다. 2D 프레임워크에서는 이러한 VBO를 독점적으로 사용하는 것도 가능합니다. 예를 들어, 가상 프레임마다 별도의 버퍼 풀을 두고, 각 드로우마다 현재 프레임의 풀에서 버퍼를 하나 가져와 정점을 복사하는 방식이 단순하면서도 효과적입니다.

@@ -1,6 +1,6 @@
 # Vulkan Memory Allocator
 
-VMA has full CMake support, but it is also a single-header library that requires users to "instantiate" it in a single translation unit. Isolating that into a wrapper library to minimize warning pollution etc, we create our own `vma::vma` target that compiles this source file:
+VMA는 CMake를 완벽히 지원하지만, 단일 번역 단위에서 정의(instantiate)되어야 하는 단일 헤더 라이브러리이기도 합니다. 이를 관리하기 위해 고유한 `vma::vma` 타겟을 직접 생성하여 소스 파일을 컴파일하겠습니다.
 
 ```cpp
 // vk_mem_alloc.cpp
@@ -9,7 +9,7 @@ VMA has full CMake support, but it is also a single-header library that requires
 #include <vk_mem_alloc.h>
 ```
 
-Unlike VulkanHPP, VMA's interface is C only, thus we shall use our `Scoped` class template to wrap objects in RAII types. The first thing we need is a `VmaAllocator`, which is similar to a `vk::Device` or `GLFWwindow*`:
+VulkanHPP와는 달리 VMA는 C만을 지원합니다. 따라서 RAII 방식으로 관리하기 위해 `Scope`클래스 템플릿을 사용할 것입니다. 가장 먼저 필요한 것은 `VmaAllocator`으로, 이는 `vk::Device` 혹은 `GLFWwindow*`와 유사한 역할을 합니다.
 
 ```cpp
 // vma.hpp
@@ -53,7 +53,7 @@ auto vma::create_allocator(vk::Instance const instance,
 }
 ```
 
-`App` stores and creates a `vma::Allocator` object:
+`App`은 `vma::Allocator` 객체를 생성하고 이를 보관합니다.
 
 ```cpp
 // ...

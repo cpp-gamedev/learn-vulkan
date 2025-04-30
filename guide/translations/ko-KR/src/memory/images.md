@@ -1,6 +1,6 @@
-# Images
+# 이미지
 
-Images have a lot more properties and creation parameters than buffers. We shall constrain ourselves to just two kinds: sampled images (textures) for shaders, and depth images for rendering. For now add the foundation types and functions:
+이미지는 버퍼보다 훨씬 더 많은 속성과 생성 파라미터를 가지고 있습니다. 여기서는 두 종류로 나누겠습니다. 셰이더에서 샘플링될 이미지(텍스쳐), 그리고 렌더링에 사용할 깊이 이미지입니다. 지금은 이러한 이미지를 위한 기본 타입과 함수만 추가하겠습니다.
 
 ```cpp
 struct RawImage {
@@ -31,7 +31,7 @@ struct ImageCreateInfo {
   -> Image;
 ```
 
-Implementation:
+구현은 다음과 같습니다.
 
 ```cpp
 void ImageDeleter::operator()(RawImage const& raw_image) const noexcept {
@@ -82,7 +82,7 @@ auto vma::create_image(ImageCreateInfo const& create_info,
 }
 ```
 
-For creating sampled images, we need both the image bytes and size (extent). Wrap that into a struct:
+샘플링할 이미지(텍스쳐)를 생성하기 위해 이미지 바이트 데이터와 크기(extent)가 필요합니다. 이를 구조체로 감싸 사용하겠습니다.
 
 ```cpp
 struct Bitmap {
@@ -91,12 +91,12 @@ struct Bitmap {
 };
 ```
 
-The creation process is similar to device buffers: requiring a staging copy, but it also needs layout transitions. In short:
+생성 과정은 디바이스 버퍼와 유사합니다. 스테이징 버퍼를 복사하고, 레이아웃 전환을 수행해야 합니다. 요약하면 다음과 같습니다.
 
-1. Create the image and staging buffer
-1. Transition the layout from Undefined to TransferDst
-1. Record a buffer image copy operation
-1. Transition the layout from TransferDst to ShaderReadOnlyOptimal
+1. 이미지와 스테이징 버퍼를 생성합니다.
+2. 이미지의 레이아웃을 Undefined에서 TransferDst로 전환합니다.
+3. 버퍼에서 이미지로 복사하는 명령을 기록합니다.
+4. 이미지의 레이아웃을 TransferDst에서 ShaderReadOnlyOptimal로 변경합니다.
 
 ```cpp
 auto vma::create_sampled_image(ImageCreateInfo const& create_info,
@@ -181,4 +181,4 @@ auto vma::create_sampled_image(ImageCreateInfo const& create_info,
 }
 ```
 
-Before such images can be used as textures, we need to set up Descriptor Set infrastructure.
+이미지를 텍스쳐로 사용하기 전에 디스크립터 셋을 구성해야 합니다.

@@ -1,6 +1,6 @@
-# Device Buffers
+# 디바이스 버퍼
 
-This guide will only use device buffers for vertex buffers, where both vertex and index data will be strung together in a single VBO. The create function can thus take the data and perform the buffer copy operation before returning. In essence this return value is a "GPU const" buffer. To enable utilizing separate spans for vertices and indices (instead of forcing allocation of a contiguous bytestream and copying the data), the create function takes a slightly awkward span of spans:
+여기서는 정점 버퍼에 디바이스 버퍼만을 사용합니다. 정점과 인덱스 정보를 하나의 VBO로 묶어 사용할 것입니다. 따라서 생성 함수는 데이터를 받아 버퍼 복사를 수행한 후 반환합니다. 기본적으로 반환값은 "GPU 상수" 버퍼일 것입니다. 정점과 인덱스 데이터를 하나의 연속된 바이트로 강제로 묶는 대신, 각 데이터를 별도의 범위로 사용할 수 있도록 생성 함수는 span을 인자로 받습니다.
 
 ```cpp
 // disparate byte spans.
@@ -12,7 +12,7 @@ using ByteSpans = std::span<std::span<std::byte const> const>;
                                         ByteSpans const& byte_spans) -> Buffer;
 ```
 
-Implement `create_device_buffer()`:
+`create_device_buffer()`는 다음과 같습니다.
 
 ```cpp
 auto vma::create_device_buffer(BufferCreateInfo const& create_info,
@@ -62,7 +62,7 @@ auto vma::create_device_buffer(BufferCreateInfo const& create_info,
 }
 ```
 
-Add a command block pool to `App`, and a helper function to create command blocks:
+`App`에 command block pool을 추가하고 commandblock을 생성하는 함수를 추가합니다.
 
 ```cpp
 void App::create_cmd_block_pool() {
@@ -80,7 +80,7 @@ auto App::create_command_block() const -> CommandBlock {
 }
 ```
 
-Update `create_vertex_buffer()` to create a quad with indices:
+`create_vertex_buffer()`를 업데이트하여 사각형을 생성하도록 합니다.
 
 ```cpp
 template <typename T>
@@ -115,7 +115,7 @@ void App::create_vertex_buffer() {
 }
 ```
 
-Update `draw()`:
+`draw()`함수를 이에 맞춰 변경합니다.
 
 ```cpp
 void App::draw(vk::CommandBuffer const command_buffer) const {

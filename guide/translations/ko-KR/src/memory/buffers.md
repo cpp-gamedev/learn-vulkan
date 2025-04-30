@@ -1,6 +1,6 @@
-# Buffers
+# 버퍼
 
-First add the RAII wrapper components for VMA buffers:
+먼저 VMA 버퍼를 위한 RAII 래퍼 컴포넌트를 추가합니다.
 
 ```cpp
 struct RawBuffer {
@@ -28,7 +28,7 @@ void BufferDeleter::operator()(RawBuffer const& raw_buffer) const noexcept {
 }
 ```
 
-Buffers can be backed by host (RAM) or device (VRAM) memory: the former is mappable and thus useful for data that changes every frame, latter is faster to access for the GPU but needs more complex methods to copy data to. Add the related types and a create function:
+버퍼는 호스트(RAM)와 디바이스(VRAM) 메모리를 기반으로 할당될 수 있습니다. 호스트 메모리는 매핑이 가능하므로 매 프레임마다 바뀌는 정보를 담기에 적합하며, 디바이스 메모리는 GPU에서 접근하기에 빠르지만 데이터를 복사하는 데 더 복잡한 절차가 필요합니다. 이를 고려하여 관련된 타입과 생성 함수를 추가하겠습니다.
 
 ```cpp
 struct BufferCreateInfo {
