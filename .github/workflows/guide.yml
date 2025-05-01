@@ -1,6 +1,6 @@
 name: ci-guide
 on: 
-  push:
+  pull_request:
     branches-ignore:
       - staging
 jobs:
