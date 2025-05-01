@@ -1,6 +1,6 @@
-name: ci-push
+name: ci-pr
 on: 
-  push:
+  pull_request:
     branches-ignore:
       - staging
       - production
