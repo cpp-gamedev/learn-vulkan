@@ -30,7 +30,7 @@
   document.addEventListener('click', function (e) {
     if (e.target && e.target.matches('button[data-lang]')) {
       const chosenLang = e.target.getAttribute('data-lang');
-      const supportedLangs = ['en', 'zh-TW']; // Add translated languages here
+      const supportedLangs = ['en', 'zh-TW', 'ko-KR']; // Add translated languages here
   
       let currentPath = window.location.pathname;
   
