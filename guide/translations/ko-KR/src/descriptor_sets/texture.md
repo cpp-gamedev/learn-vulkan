@@ -1,12 +1,12 @@
-# Texture
+# 텍스쳐
 
-With a large part of the complexity wrapped away in `vma`, a `Texture` is just a combination of three things:
+대부분의 복잡한 작업은 `vma`에서 처리하기 때문에, `Texture`는 다음 세 가지로 구성됩니다.
 
-1. Sampled Image
-2. (Unique) Image View of above
-3. (Unique) Sampler
+1. 샘플링될 이미지
+2. 해당 이미지의 이미지 뷰
+3. 고유한 샘플러
 
-In `texture.hpp`, create a default sampler:
+`texture.hpp`에 기본 샘플러를 생성하겠습니다.
 
 ```cpp
 [[nodiscard]] constexpr auto
@@ -27,7 +27,8 @@ constexpr auto sampler_ci_v = create_sampler_ci(
   vk::SamplerAddressMode::eClampToEdge, vk::Filter::eLinear);
 ```
 
-Define the Create Info and Texture types:
+CreateInfo와 텍스쳐 타입을 정의합니다.
+
 
 ```cpp
 struct TextureCreateInfo {
@@ -55,7 +56,7 @@ class Texture {
 };
 ```
 
-Add a fallback bitmap constant, and the implementation:
+에러가 발생 시 사용할(fallback) 비트맵 상수도 추가하겠습니다.
 
 ```cpp
 // 4-channels.
@@ -105,7 +106,7 @@ auto Texture::descriptor_info() const -> vk::DescriptorImageInfo {
 }
 ```
 
-To sample textures, `Vertex` will need a UV coordinate:
+텍스쳐를 샘플링하려면 `Vertex`에 UV 좌표를 추가해야 합니다.
 
 ```cpp
 struct Vertex {
@@ -128,7 +129,7 @@ constexpr auto vertex_attributes_v = std::array{
 };
 ```
 
-Store a texture in `App` and create with the other shader resources:
+`App`에 텍스쳐를 담고 다른 셰이더 자원도 함께 생성하겠습니다.
 
 ```cpp
 std::optional<Texture> m_texture{};
@@ -160,7 +161,7 @@ texture_ci.sampler.setMagFilter(vk::Filter::eNearest);
 m_texture.emplace(std::move(texture_ci));
 ```
 
-Update the descriptor pool sizes to also contain Combined Image Samplers:
+DescriptorPoolSize를 업데이트해 CombinedImageSampler도 포함하도록 수정합니다.
 
 ```cpp
 /// ...
@@ -168,7 +169,7 @@ vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, 2},
 vk::DescriptorPoolSize{vk::DescriptorType::eCombinedImageSampler, 2},
 ```
 
-Set up a new descriptor set (number 1) with a combined image sampler at binding 0. This could be added to binding 1 of set 0 as well, since we are not optimizing  binding calls (eg binding set 0 only once for multiple draws):
+새로운 디스크립터 셋(1번)의 바인딩 0번에 CombinedImageSampler를 설정합니다. 바인딩 호출 최적화를 하지 않을 경우, set 0의 바인딩 1번에 추가해도 괜찮습니다.
 
 ```cpp
 static constexpr auto set_1_bindings_v = std::array{
@@ -179,7 +180,7 @@ set_layout_cis[0].setBindings(set_0_bindings_v);
 set_layout_cis[1].setBindings(set_1_bindings_v);
 ```
 
-Remove the vertex colors and set the UVs for the quad. In Vulkan UV space is the same as GLFW window space: origin is at the top left, +X moves right, +Y moves down.
+정점 색상 값을 지우고 사각형에 UV를 설정합니다. Vulkan에서의 UV 공간은 GLFW 윈도우 공간과 동일합니다. 왼쪽 위가 원점이고, 오른쪽이 +X, 아래쪽이 +Y입니다.
 
 ```cpp
 static constexpr auto vertices_v = std::array{
@@ -190,7 +191,7 @@ static constexpr auto vertices_v = std::array{
 };
 ```
 
-Finally, update the descriptor writes:
+마지막으로, DescriptorWrite를 업데이트 합니다.
 
 ```cpp
 auto writes = std::array<vk::WriteDescriptorSet, 2>{};
@@ -205,9 +206,9 @@ write.setImageInfo(image_info)
 writes[1] = write;
 ```
 
-Since the Texture is not N-buffered (because it is "GPU const"), in this case the sets could also be updated once after texture creation instead of every frame.
+텍스쳐는 N-버퍼링되지 않기 때문에(이는 GPU 상수입니다), 디스크립터 셋도 텍스쳐 생성 이후 한번만 업데이트하면 됩니다.
 
-Add the UV vertex attribute the vertex shader and pass it to the fragment shader:
+UV 정점 속성을 정점 셰이더에 추가하고 이를 프래그먼트 셰이더로 전달합니다.
 
 ```glsl
 layout (location = 2) in vec2 a_uv;
@@ -220,7 +221,7 @@ out_color = a_color;
 out_uv = a_uv;
 ```
 
-Add set 1 and the incoming UV coords to the fragment shader, combine the sampled texture color with the vertex color:
+셋 1번과 그에 맞는 UV 좌표도 프래그먼트 셰이더에 추가하고, 샘플링한 텍스쳐 색상과 정점 색상을 섞어봅시다.
 
 ```glsl
 layout (set = 1, binding = 0) uniform sampler2D tex;
@@ -234,14 +235,14 @@ out_color = vec4(in_color, 1.0) * texture(tex, in_uv);
 
 ![RGBY Texture](./rgby_texture.png)
 
-For generating mip-maps, follow the [sample in the Vulkan docs](https://docs.vulkan.org/samples/latest/samples/api/hpp_texture_mipmap_generation/README.html#_generating_the_mip_chain). The high-level steps are:
+밉맵을 생성하기 위해서는 [Vulkan 공식 예제](https://docs.vulkan.org/samples/latest/samples/api/hpp_texture_mipmap_generation/README.html#_generating_the_mip_chain)를 참고하세요. 고수준 절차는 다음과 같습니다.
 
-1. Compute mip levels based on image size
-1. Create an image with the desired mip levels
-1. Copy the source data to the first mip level as usual
-1. Transition the first mip level to TransferSrc
-1. Iterate through all the remaining mip levels:
-    1. Transition the current mip level to TransferDst
-    1. Record an image blit operation from previous to current mip levels
-    1. Transition the current mip level to TransferSrc
-1. Transition all levels (entire image) to ShaderRead
+1. 이미지 크기에 기반하여 밉 레벨을 계산합니다.
+2. 원하는 밉 레벨 수를 갖는 이미지를 생성합니다.
+3. 첫 번째 밉 레벨에 원본 데이터를 복사합니다.
+4. 첫 번째 밉 레벨의 레이아웃을 TransferSrc로 변경합니다.
+5. 모든 밉 레벨을 순회하며 다음을 수행합니다.
+   1. 현재 밉 레벨의 레이아웃을 TransferDst로 변경합니다.
+   2. 이전 밉 레벨에서 현재 밉 레벨로 ImageBlit 작업을 수행합니다.
+   3. 현재 밉 레벨의 레이아웃을 TransferSrc로 변경합니다.
+6. 모든 레벨의 레이아웃을 ShaderRead로 변경합니다.

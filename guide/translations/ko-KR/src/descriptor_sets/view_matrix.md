@@ -1,6 +1,6 @@
-# View Matrix
+# 뷰 행렬
 
-Integrating the view matrix will be quite simple and short. First, transformations for objects and cameras/views can be encapsulated into a single struct:
+뷰 행렬을 통합하는 작업은 꽤 간단합니다. 먼저, 오브젝트와 카메라/뷰의 변환 정보를 하나의 구조체로 캡슐화합니다.
 
 ```cpp
 struct Transform {
@@ -13,7 +13,7 @@ struct Transform {
 };
 ```
 
-Extracting the common logic into a helper, both member functions can be implemented easily:
+공통된 로직을 함수로 사용하도록 두 가지 멤버 함수를 추가하겠습니다.
 
 ```cpp
 namespace {
@@ -52,7 +52,7 @@ auto Transform::view_matrix() const -> glm::mat4 {
 }
 ```
 
-Add a `Transform` member to `App` to represent the view/camera, inspect its members, and combine with the existing projection matrix:
+`App`에 `Transform` 멤버를 추가하여 뷰/카메라를 나타내고, 해당 멤버를 확인하여 기존의 프로젝션 행렬과 결합합니다.
 
 ```cpp
 Transform m_view_transform{}; // generates view matrix.
@@ -74,6 +74,6 @@ auto const bytes =
 m_view_ubo->write_at(m_frame_index, bytes);
 ```
 
-Naturally, moving the view left moves everything else - currently only a single RGBY quad - to the _right_.
+자연스럽게 뷰를 왼쪽으로 이동하면 현재는 사각형 하나뿐이지만 이것이 오른쪽으로 이동한 것으로 보일 것입니다.
 
 ![View Matrix](./view_matrix.png)

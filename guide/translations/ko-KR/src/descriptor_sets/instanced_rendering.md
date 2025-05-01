@@ -1,15 +1,15 @@
-# Instanced Rendering
+# 인스턴스 렌더링
 
-When multiple copies of a drawable object are desired, one option is to use instanced rendering. The basic idea is to store per-instance data in a uniform/storage buffer and index into it in the vertex shader. We shall represent one model matrix per instance, feel free to add more data like an overall tint (color) that gets multiplied to the existing output color in the fragment shader. This will be bound to a Storage Buffer (SSBO), which can be "unbounded" in the shader (size is determined during invocation).
+하나의 객체를 여러 번 그려야 할 때 사용할 수 있는 방법 중 하나는 인스턴스 렌더링입니다. 기본 아이디어는 인스턴스별 데이터를 유니폼 버퍼 또는 스토리지 버퍼에 담고, 이를 정점 셰이더에서 참조하는 것입니다. 우리는 인스턴스마다 하나의 모델 행렬을 표현하겠습니다. 필요하다면 색상과 같은 정보를 포함해 프래그먼트 셰이더에서 기존 출력 색상에 곱하는 방식으로 사용할 수도 있습니다. 이러한 데이터는 스토리지 버퍼(SSBO)에 바인딩되며, 버퍼의 크기는 호출 시점에 결정됩니다.
 
-Store the SSBO and a buffer for instance matrices:
+SSBO와 인스턴스 행렬을 저장할 버퍼를 추가합니다.
 
 ```cpp
 std::vector<glm::mat4> m_instance_data{}; // model matrices.
 std::optional<DescriptorBuffer> m_instance_ssbo{};
 ```
 
-Add two `Transform`s as the source of rendering instances, and a function to update the matrices:
+렌더링할 인스턴스에 사용할 `Transform`을 추가하고 이를 기반으로 행렬을 업데이트하는 함수를 추가합니다.
 
 ```cpp
 void update_instances();
@@ -33,7 +33,7 @@ void App::update_instances() {
 }
 ```
 
-Update the descriptor pool to also provide storage buffers:
+디스크립터 풀을 업데이트하여 스토리지 버퍼를 지원하도록 합니다.
 
 ```cpp
 // ...
@@ -41,11 +41,11 @@ vk::DescriptorPoolSize{vk::DescriptorType::eCombinedImageSampler, 2},
 vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, 2},
 ```
 
-Add set 2 and its new binding. Such a set layout keeps each "layer" isolated:
+디스크립터 셋을 2번과 해당 바인딩을 추가합니다. 이처럼 각 디스크립터 셋을 명확하게 역할별로 분리하는 것이 좋습니다.
 
-* Set 0: view / camera
-* Set 1: textures / material
-* Set 2: draw instances
+* 디스크립터 셋 0 - : 뷰 / 카메라
+* 디스크립터 셋 1 - 텍스쳐 / 머테리얼
+* 디스크립터 셋 2 : 인스턴싱
 
 ```cpp
 static constexpr auto set_2_bindings_v = std::array{
@@ -56,14 +56,14 @@ auto set_layout_cis = std::array<vk::DescriptorSetLayoutCreateInfo, 3>{};
 set_layout_cis[2].setBindings(set_2_bindings_v);
 ```
 
-Create the instance SSBO after the view UBO:
+뷰 UBO를 생성한 이후 인스턴스용 SSBO를 생성합니다.
 
 ```cpp
 m_instance_ssbo.emplace(m_allocator.get(), m_gpu.queue_family,
                         vk::BufferUsageFlagBits::eStorageBuffer);
 ```
 
-Call `update_instances()` after `update_view()`:
+`update_view()`를 호출한 다음 `update_instances()`를 호출합니다.
 
 ```cpp
 // ...
@@ -71,7 +71,7 @@ update_view();
 update_instances();
 ```
 
-Extract transform inspection into a lambda and inspect each instance transform too:
+트랜스폼 확인 로직을 람다로 분리해 각 인스턴스의 트랜스폼을 검사합니다.
 
 ```cpp
 static auto const inspect_transform = [](Transform& out) {
@@ -99,7 +99,7 @@ if (ImGui::TreeNode("Instances")) {
 }
 ```
 
-Add another descriptor write for the SSBO:
+SSBO를 위한 descriptorWrite도 추가합니다.
 
 ```cpp
 auto writes = std::array<vk::WriteDescriptorSet, 3>{};
@@ -115,7 +115,7 @@ write.setBufferInfo(instance_ssbo_info)
 writes[2] = write;
 ```
 
-Finally, change the instance count in the draw call:
+마지막으로, 드로우 콜의 인스턴스 수를 변경합니다.
 
 ```cpp
 auto const instances = static_cast<std::uint32_t>(m_instances.size());
@@ -123,7 +123,7 @@ auto const instances = static_cast<std::uint32_t>(m_instances.size());
 command_buffer.drawIndexed(6, instances, 0, 0, 0);
 ```
 
-Update the vertex shader to incorporate the instance model matrix:
+정점 셰이더를 수정하여 인스턴스별 모델 행렬을 적용합니다.
 
 ```glsl
 // ...

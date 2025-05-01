@@ -1,8 +1,8 @@
-# Pipeline Layout
+# 파이프라인 레이아웃
 
-A [Vulkan Pipeline Layout](https://registry.khronos.org/vulkan/specs/latest/man/html/VkPipelineLayout.html) represents a sequence of descriptor sets (and push constants) associated with a shader program. Even when using Shader Objects, a Pipeline Layout is needed to utilize descriptor sets.
+[Vulkan 파이프라인 레이아웃](https://registry.khronos.org/vulkan/specs/latest/man/html/VkPipelineLayout.html)은 셰이더 프로그램과 연결된 디스크립터 셋과 푸시 상수를 나타냅니다. 셰이더 오브젝트를 사용할 경우에도 디스크립터 셋을 활용하기 위해 파이프라인 레이아웃이 필요합니다.
 
-Starting with the layout of a single descriptor set containing a uniform buffer to set the view/projection matrices in, store a descriptor pool in `App` and create it before the shader:
+뷰/프로젝션 행렬을 담기 위한 유니폼 버퍼를 포함하는 단일 디스크립터 셋 레이아웃부터 시작합니다. 디스크립터 풀을 `App`에 추가하고 셰이더보다 먼저 생성합니다.
 
 ```cpp
 vk::UniqueDescriptorPool m_descriptor_pool{};
@@ -20,7 +20,7 @@ void App::create_descriptor_pool() {
 }
 ```
 
-Add new members to `App` to store the set layouts and pipeline layout. `m_set_layout_views` is just a copy of the descriptor set layout handles in a contiguous vector:
+새로운 멤버를 `App`에 추가해 디스크립터 셋 레이아웃과 파이프라인 레이아웃을 담도록 합니다. `m_set_layout_views`는 디스크립터 셋 레이아웃의 핸들을 연속된 vector로 복사한 것입니다.
 
 ```cpp
 std::vector<vk::UniqueDescriptorSetLayout> m_set_layouts{};
@@ -55,7 +55,7 @@ void App::create_pipeline_layout() {
 }
 ```
 
-Add a helper function that allocates a set of descriptor sets for the entire layout:
+레이아웃 전체에 해당하는 디스크립터 셋을 할당하는 함수를 추가합니다.
 
 ```cpp
 auto App::allocate_sets() const -> std::vector<vk::DescriptorSet> {
@@ -66,7 +66,7 @@ auto App::allocate_sets() const -> std::vector<vk::DescriptorSet> {
 }
 ```
 
-Store a Buffered copy of descriptor sets for one drawable object:
+그릴 객체에 쓰일 디스크립터 셋을 저장합니다.
 
 ```cpp
 Buffered<std::vector<vk::DescriptorSet>> m_descriptor_sets{};

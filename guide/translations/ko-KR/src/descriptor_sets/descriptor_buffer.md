@@ -1,6 +1,6 @@
-# Descriptor Buffer
+# 디스크립터 버퍼
 
-Uniform and Storage buffers need to be N-buffered unless they are "GPU const", ie contents do not change after creation.  Encapsulate a `vma::Buffer` per virtual frame in a `DescriptorBuffer`:
+유니폼과 스토리지 버퍼는 생성 이후 내용이 변경되지 않는 GPU 상수가 아닌 이상, N-버퍼링 되어야 합니다. 각 가상 프레임마다의 하나의 `vma::Buffer`를 `DescriptorBuffer`로 캡슐화하겠습니다.
 
 ```cpp
 class DescriptorBuffer {
@@ -29,7 +29,7 @@ class DescriptorBuffer {
 };
 ```
 
-The implementation is fairly straightforward, it reuses existing buffers if they are large enough, else recreates them before copying data. It also ensures buffers are always valid to be bound to descriptors.
+구현은 꽤 단순합니다. 기존의 버퍼로 충분하다면 재사용하고, 아니라면 데이터를 복사하기 전에 새로 생성합니다. 이렇게 하면 디스크립터 셋에 바인딩할 버퍼가 항상 유효한 상태임을 보장합니다.
 
 ```cpp
 DescriptorBuffer::DescriptorBuffer(VmaAllocator allocator,
@@ -73,7 +73,7 @@ void DescriptorBuffer::write_to(Buffer& out,
 }
 ```
 
-Store a `DescriptorBuffer` in `App` and rename `create_vertex_buffer()` to `create_shader_resources()`:
+`App`에 `DescriptorBuffer`를 저장하고 `create_vertex_buffer()`함수의 이름을 `create_shader_resources()`로 변경합니다.
 
 ```cpp
 std::optional<DescriptorBuffer> m_view_ubo{};
@@ -86,7 +86,7 @@ m_view_ubo.emplace(m_allocator.get(), m_gpu.queue_family,
                    vk::BufferUsageFlagBits::eUniformBuffer);
 ```
 
-Add functions to update the view/projection matrices and bind the frame's descriptor sets:
+뷰/프로젝션 행렬을 업데이트하고 프레임별 디스크립터 셋을 바인딩하는 함수를 추가합니다.
 
 ```cpp
 void App::update_view() {
@@ -120,7 +120,7 @@ void App::bind_descriptor_sets(vk::CommandBuffer const command_buffer) const {
 }
 ```
 
-Add the descriptor set layouts to the Shader, call `update_view()` before `draw()`, and `bind_descriptor_sets()` in `draw()`:
+셰이더에 디스크립터 셋 레이아웃을 추가하고, `draw()` 호출 전에 `update_view()`를 호출하며, `draw()` 내부에서 `bind_descriptor_sets()`를 호출합니다.
 
 ```cpp
 auto const shader_ci = ShaderProgram::CreateInfo{
@@ -142,7 +142,7 @@ bind_descriptor_sets(command_buffer);
 // ...
 ```
 
-Update the vertex shader to use the view UBO:
+정점 셰이더를 이에 맞춰 변경해줍니다.
 
 ```glsl
 layout (set = 0, binding = 0) uniform View {
@@ -158,7 +158,7 @@ void main() {
 }
 ```
 
-Since the projected space is now the framebuffer size instead of [-1, 1], update the vertex positions to be larger than 1 pixel:
+투영 공간이 이제 [ -1, 1] 범위가 아닌 프레임버퍼 크기를 기준으로 하기 때문에 정점 위치를 1픽셀보다 크게 위치하도록 업데이트합니다.
 
 ```cpp
 static constexpr auto vertices_v = std::array{
@@ -171,4 +171,4 @@ static constexpr auto vertices_v = std::array{
 
 ![View UBO](./view_ubo.png)
 
-When such descriptor buffers are created and destroyed dynamically, they would need to store a `ScopedWaiter` to ensure all rendering with descriptor sets bound to them completes before destruction. Alternatively, the app can maintain a pool of scratch buffers (similar to small/dynamic vertex buffers) per virtual frame which get destroyed in a batch instead of individually.
+이러한 디스크립터 버퍼가 동적으로 생성되고 파괴될 때, 관련 디스크립터 셋을 사용하는 렌더링이 모두 완료된 후에 파괴되도록 `ScopedWaiter`를 사용해 보장합니다. 또는, 프레임마다 임시 버퍼 풀을 유지하여(작거나 동적인 정점 버퍼와 유사하게) 버퍼를 개별이 아닌 일괄적으로 파괴하는 방식도 사용할 수 있습니다.
