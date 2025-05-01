@@ -1,6 +1,5 @@
 # 스왑체인 업데이트
 
-Swapchain acquire/present operations can have various results. We constrain ourselves to the following:
 스왑체인에서 이미지를 받아오고 표시하는 작업은 다양한 결과를 반환할 수 있습니다. 우리는 다음과 같은 경우에 한정하여 처리합니다.
 
 - `eSuccess` : 문제가 없습니다.

@@ -191,7 +191,6 @@ auto PipelineBuilder::build(vk::PipelineLayout const layout,
 }
 ```
 
-`App` will need to store a builder, a Pipeline Layout, and the Pipeline(s):
 `App`은 빌더, 파이프라인 레이아웃, 그리고 파이프라인을 담아야 합니다.
 
 ```cpp

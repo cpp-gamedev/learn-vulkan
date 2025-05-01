@@ -1,6 +1,6 @@
-# Swapchain
+# 스왑체인
 
-[Swapchain](https://docs.vulkan.org/guide/latest/wsi.html#_swapchain)은 Surface와 연결된, 화면에 표시 가능한 이미지들의 배열입니다. 이는 애플리케이션과 플랫폼의 프레젠테이션 엔진 사이를 이어주는 다리 역할을 합니다. 스왑체인은 메인 루프에서 이미지를 받아오고 화면에 표시하기 위해 지속적으로 사용됩니다. 스왑체인 생성에 실패하는 것은 치명적인 오류이므로, 그 생성 과정은 초기화 단계에 포함됩니다.
+[스왑체인](https://docs.vulkan.org/guide/latest/wsi.html#_swapchain)은 Surface와 연결된, 화면에 표시 가능한 이미지들의 배열입니다. 이는 애플리케이션과 플랫폼의 프레젠테이션 엔진 사이를 이어주는 다리 역할을 합니다. 스왑체인은 메인 루프에서 이미지를 받아오고 화면에 표시하기 위해 지속적으로 사용됩니다. 스왑체인 생성에 실패하는 것은 치명적인 오류이므로, 그 생성 과정은 초기화 단계에 포함됩니다.
 
 스왑체인을 우리가 정의한 `class Swapchain`으로 감쌀 것입니다. 이 클래스는 스왑체인이 소유한 이미지의 복사본을 저장하고, 각 이미지에 맞는 이미지 뷰를 생성하고 소유합니다. 스왑체인은 프레임 버퍼 크기가 변경되거나, acquire/present 작업이 `vk::ErrorOutOfDataKHR`를 반환하는 경우처럼, 메인 루프 중에 재생성이 필요할 수 있습니다. 이를 `recreate()` 함수로 캡슐화하여 초기화 시점에도 간단히 호출할 수 있도록 하겠습니다.
 
@@ -86,8 +86,7 @@ if (!recreate(size)) {
 
 ## 스왑체인 재생성
 
-The constraints on Swapchain creation parameters are specified by [Surface Capabilities](https://registry.khronos.org/vulkan/specs/latest/man/html/VkSurfaceCapabilitiesKHR.html). Based on the spec we add two helper functions and a constant:
-스왑체인 생성 파라미터의 제약은 Surface Capabilities에 지정됩니다. 스펙에 따라 함수 두 개와 상수 하나를 추가하겠습니다.
+스왑체인 생성 파라미터의 제약은 [Surface Capabilities](https://registry.khronos.org/vulkan/specs/latest/man/html/VkSurfaceCapabilitiesKHR.html)에 지정됩니다. 사양에 따라 함수 두 개와 상수 하나를 추가하겠습니다.
 
 ```cpp
 constexpr std::uint32_t min_images_v{3};

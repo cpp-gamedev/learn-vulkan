@@ -1,4 +1,4 @@
-# Vulkan Instance
+# Vulkan 인스턴스
 
 Vulkan을 SDK를 통해 빌드 시점에 링킹하는 대신, 런타임에 동적으로 로드할 것입니다. 이를 위해 몇 가지 조정이 필요합니다.
 
@@ -6,8 +6,7 @@ Vulkan을 SDK를 통해 빌드 시점에 링킹하는 대신, 런타임에 동�
 2. `app.cpp`에서 전역에 `VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE`를 추가합니다.
 3. 초기화 이전과 초기화 과정 중에 `VULKAN_HPP_DEFAULT_DISPATCHER.init()`을 호출합니다.
 
-Vulkan에서 가장 먼저 해야할 것은 [Instance](https://docs.vulkan.org/spec/latest/chapters/initialization.html#initialization-instances)를 생성하는 것입니다. 이는 물리 디바이스(GPU)의 목록을 가져오거나, 논리 디바이스를 생성할 수 있습니다.
-Instance
+Vulkan에서 가장 먼저 해야할 것은 [인스턴스](https://docs.vulkan.org/spec/latest/chapters/initialization.html#initialization-instances)를 생성하는 것입니다. 이는 물리 디바이스(GPU)의 목록을 가져오거나, 논리 디바이스를 생성할 수 있습니다.
 
 Vulkan 1.3 버전을 필요로 하므로, 이를 상수로 정의해 쉽게 참조할 수 있도록 합니다.
 
