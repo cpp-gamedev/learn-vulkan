@@ -1,0 +1,3 @@
+# 렌더링
+
+여기서는 렌더 싱크, 스왑체인 루프의 구현, 스왑체인 이미지의 레이아웃 전환을 수행하고, [동적 렌더링(Dynamic Rendering)](https://docs.vulkan.org/samples/latest/samples/extensions/dynamic_rendering/README.html)을 소개합니다. 초기 Vulkan은 [렌더 패스(Render Passes)](https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/02_Graphics_pipeline_basics/03_Render_passes.html)만을 지원했습니다. 렌더 패스는 설정이 장황하고, (subpass 의존성 같은) 다소 혼란스러운 요소들을 요구하며, 아이러니하게도 오히려 명시적이지 않은 부분이 있습니다. 예를 들어 렌더패스는 프레임버퍼 어태치먼트의 레이아웃을 암시적으로 전환할 수 있습니다. 또한 렌더 패스는 그래픽스 파이프라인과 밀접하게 결합되어 있어, 다른 모든 조건이 같더라도 렌더 패스마다 별도의 파이프라인 객체가 필요합니다. 이 렌더 패스/서브 패스 모델은 타일 기반 렌더러를 사용하는 GPU에 주로 유리한 모델이었습니다. 그리고 Vulkan 1.3에서는 동적 렌더링이 렌더 패스를 대체하는 핵심 API로 부상했습니다(이전에는 확장일 뿐이었습니다).

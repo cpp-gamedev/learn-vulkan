@@ -19,5 +19,5 @@ jobs:
       - name: build
         run: |
           cd guide
-          mdbook build || exit 1
+          cmake -P build.cmake || exit 1
           ls book

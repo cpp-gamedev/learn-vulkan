@@ -1,0 +1,13 @@
+/* 1) Make .left-buttons positioned so its child popups can anchor to it */
+.left-buttons {
+  position: relative;
+}
+
+/* 2) Specifically override #lang-list to appear at the right edge under the button */
+.left-buttons #lang-list.theme-popup {
+  left: auto;                  /* remove the default left: 10px */
+  right: 0;                    /* pin to the right edge of .left-buttons */
+  top: calc(var(--menu-bar-height) + 4px); 
+  width: auto;                 /* don’t stretch across the screen */
+  white-space: nowrap;         /* keep the list from wrapping into multiple lines */
+}
