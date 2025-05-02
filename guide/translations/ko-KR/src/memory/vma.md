@@ -1,0 +1,66 @@
+# Vulkan Memory Allocator
+
+VMA는 CMake를 완벽히 지원하지만, 단일 번역 단위에서 정의(instantiate)되어야 하는 단일 헤더 라이브러리이기도 합니다. 이를 관리하기 위해 고유한 `vma::vma` 타겟을 직접 생성하여 소스 파일을 컴파일하겠습니다.
+
+```cpp
+// vk_mem_alloc.cpp
+#define VMA_IMPLEMENTATION
+
+#include <vk_mem_alloc.h>
+```
+
+VulkanHPP와는 달리 VMA는 C만을 지원합니다. 따라서 RAII 방식으로 관리하기 위해 `Scope`클래스 템플릿을 사용할 것입니다. 가장 먼저 필요한 것은 `VmaAllocator`으로, 이는 `vk::Device` 혹은 `GLFWwindow*`와 유사한 역할을 합니다.
+
+```cpp
+// vma.hpp
+namespace lvk::vma {
+struct Deleter {
+  void operator()(VmaAllocator allocator) const noexcept;
+};
+
+using Allocator = Scoped<VmaAllocator, Deleter>;
+
+[[nodiscard]] auto create_allocator(vk::Instance instance,
+                                    vk::PhysicalDevice physical_device,
+                                    vk::Device device) -> Allocator;
+} // namespace lvk::vma
+
+// vma.cpp
+void Deleter::operator()(VmaAllocator allocator) const noexcept {
+  vmaDestroyAllocator(allocator);
+}
+
+// ...
+auto vma::create_allocator(vk::Instance const instance,
+                           vk::PhysicalDevice const physical_device,
+                           vk::Device const device) -> Allocator {
+  auto const& dispatcher = VULKAN_HPP_DEFAULT_DISPATCHER;
+  // need to zero initialize C structs, unlike VulkanHPP.
+  auto vma_vk_funcs = VmaVulkanFunctions{};
+  vma_vk_funcs.vkGetInstanceProcAddr = dispatcher.vkGetInstanceProcAddr;
+  vma_vk_funcs.vkGetDeviceProcAddr = dispatcher.vkGetDeviceProcAddr;
+
+  auto allocator_ci = VmaAllocatorCreateInfo{};
+  allocator_ci.physicalDevice = physical_device;
+  allocator_ci.device = device;
+  allocator_ci.pVulkanFunctions = &vma_vk_funcs;
+  allocator_ci.instance = instance;
+  VmaAllocator ret{};
+  auto const result = vmaCreateAllocator(&allocator_ci, &ret);
+  if (result == VK_SUCCESS) { return ret; }
+
+  throw std::runtime_error{"Failed to create Vulkan Memory Allocator"};
+}
+```
+
+`App`은 `vma::Allocator` 객체를 생성하고 이를 보관합니다.
+
+```cpp
+// ...
+vma::Allocator m_allocator{}; // anywhere between m_device and m_shader.
+
+// ...
+void App::create_allocator() {
+  m_allocator = vma::create_allocator(*m_instance, m_gpu.device, *m_device);
+}
+```

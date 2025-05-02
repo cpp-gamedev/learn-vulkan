@@ -1,0 +1,10 @@
+[book]
+authors = ["Karnage", "DDing"]
+language = "ko-KR"
+src = "src"
+title = "Learn Vulkan"
+
+[output.html]
+theme = "../theme"
+additional-js = ["../theme/lang_toggle.js"]
+additional-css = ["../theme/lang_toggle.css"]
