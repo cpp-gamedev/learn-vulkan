@@ -120,6 +120,8 @@ auto Swapchain::recreate(glm::ivec2 size) -> bool {
 
 	populate_images();
 	create_image_views();
+	// recreate present semaphores as the image count might have changed.
+	create_present_semaphores();
 
 	size = get_size();
 	std::println("[lvk] Swapchain [{}x{}]", size.x, size.y);
@@ -155,13 +157,18 @@ auto Swapchain::base_barrier() const -> vk::ImageMemoryBarrier2 {
 	return ret;
 }
 
-auto Swapchain::present(vk::Queue const queue, vk::Semaphore const to_wait)
-	-> bool {
+auto Swapchain::get_present_semaphore() const -> vk::Semaphore {
+	return *m_present_semaphores.at(m_image_index.value());
+}
+
+auto Swapchain::present(vk::Queue const queue) -> bool {
 	auto const image_index = static_cast<std::uint32_t>(m_image_index.value());
+	auto const wait_semaphore =
+		*m_present_semaphores.at(static_cast<std::size_t>(image_index));
 	auto present_info = vk::PresentInfoKHR{};
 	present_info.setSwapchains(*m_swapchain)
 		.setImageIndices(image_index)
-		.setWaitSemaphores(to_wait);
+		.setWaitSemaphores(wait_semaphore);
 	// avoid VulkanHPP ErrorOutOfDateKHR exceptions by using alternate API.
 	auto const result = queue.presentKHR(&present_info);
 	m_image_index.reset();
@@ -193,6 +200,14 @@ void Swapchain::create_image_views() {
 	for (auto const image : m_images) {
 		image_view_ci.setImage(image);
 		m_image_views.push_back(m_device.createImageViewUnique(image_view_ci));
+	}
+}
+
+void Swapchain::create_present_semaphores() {
+	m_present_semaphores.clear();
+	m_present_semaphores.resize(m_images.size());
+	for (auto& semaphore : m_present_semaphores) {
+		semaphore = m_device.createSemaphoreUnique({});
 	}
 }
 } // namespace lvk
