@@ -1,4 +1,4 @@
-name: ci-push
+name: ci-pr
 on: 
   pull_request:
     branches-ignore:
