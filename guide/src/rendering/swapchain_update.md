@@ -1,5 +1,41 @@
 # Swapchain Update
 
+Add a vector of semaphores and populate them in `recreate()`:
+
+```cpp
+void create_present_semaphores();
+
+// ...
+// signaled when image is ready to be presented.
+std::vector<vk::UniqueSemaphore> m_present_semaphores{};
+
+// ...
+auto Swapchain::recreate(glm::ivec2 size) -> bool {
+  // ...
+  populate_images();
+  create_image_views();
+  // recreate present semaphores as the image count might have changed.
+  create_present_semaphores();
+  // ...
+}
+
+void Swapchain::create_present_semaphores() {
+  m_present_semaphores.clear();
+  m_present_semaphores.resize(m_images.size());
+  for (auto& semaphore : m_present_semaphores) {
+    semaphore = m_device.createSemaphoreUnique({});
+  }
+}
+```
+
+Add a function to get the present semaphore corresponding to the acquired image, this will be signaled by render command submission:
+
+```cpp
+auto Swapchain::get_present_semaphore() const -> vk::Semaphore {
+  return *m_present_semaphores.at(m_image_index.value());
+}
+```
+
 Swapchain acquire/present operations can have various results. We constrain ourselves to the following:
 
 - `eSuccess`: all good
@@ -59,13 +95,15 @@ auto Swapchain::acquire_next_image(vk::Semaphore const to_signal)
 Similarly, present:
 
 ```cpp
-auto Swapchain::present(vk::Queue const queue, vk::Semaphore const to_wait)
+auto Swapchain::present(vk::Queue const queue)
   -> bool {
   auto const image_index = static_cast<std::uint32_t>(m_image_index.value());
+  auto const wait_semaphore =
+    *m_present_semaphores.at(static_cast<std::size_t>(image_index));
   auto present_info = vk::PresentInfoKHR{};
   present_info.setSwapchains(*m_swapchain)
     .setImageIndices(image_index)
-    .setWaitSemaphores(to_wait);
+    .setWaitSemaphores(wait_semaphore);
   // avoid VulkanHPP ErrorOutOfDateKHR exceptions by using alternate API.
   auto const result = queue.presentKHR(&present_info);
   m_image_index.reset();

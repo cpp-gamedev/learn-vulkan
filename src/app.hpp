@@ -17,11 +17,9 @@ class App {
 
   private:
 	struct RenderSync {
-		// signalled when Swapchain image has been acquired.
+		// signaled when Swapchain image has been acquired.
 		vk::UniqueSemaphore draw{};
-		// signalled when image is ready to be presented.
-		vk::UniqueSemaphore present{};
-		// signalled with present Semaphore, waited on before next render.
+		// signaled with present Semaphore, waited on before next render.
 		vk::UniqueFence drawn{};
 		// used to record rendering commands.
 		vk::CommandBuffer command_buffer{};
