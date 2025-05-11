@@ -175,8 +175,7 @@ void App::submit_and_present() {
   // framebuffer size does not match the Swapchain image size, check it
   // explicitly.
   auto const fb_size_changed = m_framebuffer_size != m_swapchain->get_size();
-  auto const out_of_date =
-    !m_swapchain->present(m_queue, *render_sync.present);
+  auto const out_of_date = !m_swapchain->present(m_queue);
   if (fb_size_changed || out_of_date) {
     m_swapchain->recreate(m_framebuffer_size);
   }
