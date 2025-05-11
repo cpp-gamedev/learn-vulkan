@@ -1,14 +1,15 @@
 {
-  "version": 2,
+  "version": 5,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 20,
+    "minor": 24,
     "patch": 0
   },
   "configurePresets": [
     {
       "name": "default",
-      "description": "Build configuration using Ninja Multi-config",
+      "displayName": "Default Config",
+      "description": "Base configuration using Ninja Multi-config",
       "generator": "Ninja Multi-Config",
       "binaryDir": "${sourceDir}/out/default",
       "cacheVariables": {
@@ -16,50 +17,115 @@
       }
     },
     {
-      "name": "ninja-clang",
-      "description": "Build configuration using Ninja Multi-config / clang",
+      "name": "base-gcc",
+      "hidden": true,
       "inherits": "default",
-      "binaryDir": "${sourceDir}/out/clang",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "base-clang",
+      "hidden": true,
+      "inherits": "default",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++"
       }
     },
     {
+      "name": "base-msvc",
+      "hidden": true,
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "ninja-gcc",
+      "displayName": "Ninja GCC",
+      "description": "Build configuration using Ninja Multi-config / GCC",
+      "inherits": "base-gcc",
+      "binaryDir": "${sourceDir}/out/gcc",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_DEBUG_INIT": "-Wall -Wextra -Wpedantic -Werror=return-type",
+        "CMAKE_CXX_FLAGS_INIT": "-Wall -Wextra -Wpedantic -Werror"
+      }
+    },
+    {
+      "name": "ninja-clang",
+      "displayName": "Ninja Clang",
+      "description": "Build configuration using Ninja Multi-config / Clang",
+      "inherits": "base-clang",
+      "binaryDir": "${sourceDir}/out/clang",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_DEBUG_INIT": "-Wall -Wextra -Wpedantic -Werror=return-type",
+        "CMAKE_CXX_FLAGS_INIT": "-Wall -Wextra -Wpedantic -Werror"
+      }
+    },
+    {
+      "name": "ninja-msvc",
+      "displayName": "Ninja MSVC",
+      "description": "Build configuration using Ninja Multi-config / MSVC",
+      "inherits": "base-msvc",
+      "binaryDir": "${sourceDir}/out/msvc",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_INIT": "/WX"
+      }
+    },
+    {
       "name": "ninja-ubsan",
+      "displayName": "Ninja UBSan",
       "description": "UBSan build configuration using Ninja Multi-config",
       "inherits": "default",
       "binaryDir": "${sourceDir}/out/ubsan",
       "cacheVariables": {
-        "CMAKE_C_FLAGS": "-fsanitize=undefined",
-        "CMAKE_CXX_FLAGS": "-fsanitize=undefined"
+        "CMAKE_CXX_FLAGS_DEBUG_INIT": "-fsanitize=undefined -Wall -Wextra -Wpedantic -Werror=return-type",
+        "CMAKE_CXX_FLAGS_INIT": "-fsanitize=undefined -Wall -Wextra -Wpedantic -Werror"
       }
     },
     {
       "name": "ninja-asan",
+      "displayName": "Ninja ASan",
       "description": "ASan build configuration using Ninja Multi-config",
       "inherits": "default",
       "binaryDir": "${sourceDir}/out/asan",
       "cacheVariables": {
-        "CMAKE_C_FLAGS": "-fsanitize=address",
-        "CMAKE_CXX_FLAGS": "-fsanitize=address"
+        "CMAKE_CXX_FLAGS_DEBUG_INIT": "-fsanitize=address -Wall -Wextra -Wpedantic -Werror=return-type",
+        "CMAKE_CXX_FLAGS_INIT": "-fsanitize=address -Wall -Wextra -Wpedantic -Werror"
+      }
+    },
+    {
+      "name": "ninja-msvc-asan",
+      "displayName": "Ninja MSVC ASan",
+      "description": "ASan build configuration using Ninja Multi-config",
+      "inherits": "base-msvc",
+      "binaryDir": "${sourceDir}/out/asan",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_INIT": "-fsanitize=address"
       }
     },
     {
       "name": "ninja-tsan",
+      "displayName": "Ninja TSan",
       "description": "TSan build configuration using Ninja Multi-config",
       "inherits": "default",
       "binaryDir": "${sourceDir}/out/tsan",
       "cacheVariables": {
-        "CMAKE_C_FLAGS": "-fsanitize=thread",
-        "CMAKE_CXX_FLAGS": "-fsanitize=thread"
+        "CMAKE_CXX_FLAGS_INIT": "-fsanitize=thread -Wall -Wextra -Wpedantic -Werror=return-type"
       }
     },
     {
       "name": "vs22",
+      "displayName": "Visual Studio 2022",
       "description": "Build configuration using Visual Studio 17 (2022)",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/out/vs",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_INIT": "/WX"
+      },
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -81,6 +147,36 @@
       "name": "RelWithDebInfo",
       "configurePreset": "default",
       "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "GCC Debug",
+      "configurePreset": "ninja-gcc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "GCC RelWithDebInfo",
+      "configurePreset": "ninja-gcc",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "Clang Debug",
+      "configurePreset": "ninja-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Clang RelWithDebInfo",
+      "configurePreset": "ninja-clang",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "MSVC Debug",
+      "configurePreset": "ninja-msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "MSVC Release",
+      "configurePreset": "ninja-msvc",
+      "configuration": "Release"
     },
     {
       "name": "UBSan Debug",
@@ -105,6 +201,42 @@
       "name": "RelWithDebInfo",
       "configurePreset": "default",
       "configuration": "RelWithDebInfo",
+      "inheritConfigureEnvironment": true
+    },
+    {
+      "name": "GCC Debug",
+      "configurePreset": "ninja-gcc",
+      "configuration": "Debug",
+      "inheritConfigureEnvironment": true
+    },
+    {
+      "name": "GCC RelWithDebInfo",
+      "configurePreset": "ninja-gcc",
+      "configuration": "RelWithDebInfo",
+      "inheritConfigureEnvironment": true
+    },
+    {
+      "name": "Clang Debug",
+      "configurePreset": "ninja-clang",
+      "configuration": "Debug",
+      "inheritConfigureEnvironment": true
+    },
+    {
+      "name": "Clang RelWithDebInfo",
+      "configurePreset": "ninja-clang",
+      "configuration": "RelWithDebInfo",
+      "inheritConfigureEnvironment": true
+    },
+    {
+      "name": "MSVC Debug",
+      "configurePreset": "ninja-msvc",
+      "configuration": "Debug",
+      "inheritConfigureEnvironment": true
+    },
+    {
+      "name": "MSVC Release",
+      "configurePreset": "ninja-msvc",
+      "configuration": "Release",
       "inheritConfigureEnvironment": true
     },
     {

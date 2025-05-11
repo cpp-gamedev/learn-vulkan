@@ -219,7 +219,6 @@ void App::create_render_sync() {
 		 std::views::zip(m_render_sync, command_buffers)) {
 		sync.command_buffer = command_buffer;
 		sync.draw = m_device->createSemaphoreUnique({});
-		sync.present = m_device->createSemaphoreUnique({});
 		sync.drawn = m_device->createFenceUnique(fence_create_info_v);
 	}
 }
@@ -439,7 +438,7 @@ void App::submit_and_present() {
 	wait_semaphore_info.setSemaphore(*render_sync.draw)
 		.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
 	auto signal_semaphore_info = vk::SemaphoreSubmitInfo{};
-	signal_semaphore_info.setSemaphore(*render_sync.present)
+	signal_semaphore_info.setSemaphore(m_swapchain->get_present_semaphore())
 		.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
 	submit_info.setCommandBufferInfos(command_buffer_info)
 		.setWaitSemaphoreInfos(wait_semaphore_info)
@@ -453,8 +452,7 @@ void App::submit_and_present() {
 	// framebuffer size does not match the Swapchain image size, check it
 	// explicitly.
 	auto const fb_size_changed = m_framebuffer_size != m_swapchain->get_size();
-	auto const out_of_date =
-		!m_swapchain->present(m_queue, *render_sync.present);
+	auto const out_of_date = !m_swapchain->present(m_queue);
 	if (fb_size_changed || out_of_date) {
 		m_swapchain->recreate(m_framebuffer_size);
 	}
