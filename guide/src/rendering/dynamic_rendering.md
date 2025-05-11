@@ -161,7 +161,7 @@ void App::submit_and_present() {
   wait_semaphore_info.setSemaphore(*render_sync.draw)
     .setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
   auto signal_semaphore_info = vk::SemaphoreSubmitInfo{};
-  signal_semaphore_info.setSemaphore(*render_sync.present)
+  signal_semaphore_info.setSemaphore(m_swapchain->get_present_semaphore())
     .setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
   submit_info.setCommandBufferInfos(command_buffer_info)
     .setWaitSemaphoreInfos(wait_semaphore_info)
