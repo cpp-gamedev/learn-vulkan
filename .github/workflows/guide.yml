@@ -3,6 +3,7 @@ on:
   pull_request:
     branches-ignore:
       - staging
+  workflow_dispatch:
 jobs:
   build-book:
     runs-on: ubuntu-latest

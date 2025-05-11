@@ -4,6 +4,7 @@ on:
     branches-ignore:
       - staging
       - production
+  workflow_dispatch:
 jobs:
   format-check:
     runs-on: ubuntu-latest
