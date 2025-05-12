@@ -1,6 +1,42 @@
 # 스왑체인 업데이트
 
-스왑체인에서 이미지를 받아오고 표시하는 작업은 다양한 결과를 반환할 수 있습니다. 우리는 다음과 같은 경우에 한정하여 처리합니다.
+세마포어 vector를 추가하고 `recreate()`함수를 통해 이를 할당합니다.
+
+```cpp
+void create_present_semaphores();
+
+// ...
+// signaled when image is ready to be presented.
+std::vector<vk::UniqueSemaphore> m_present_semaphores{};
+
+// ...
+auto Swapchain::recreate(glm::ivec2 size) -> bool {
+  // ...
+  populate_images();
+  create_image_views();
+  // recreate present semaphores as the image count might have changed.
+  create_present_semaphores();
+  // ...
+}
+
+void Swapchain::create_present_semaphores() {
+  m_present_semaphores.clear();
+  m_present_semaphores.resize(m_images.size());
+  for (auto& semaphore : m_present_semaphores) {
+    semaphore = m_device.createSemaphoreUnique({});
+  }
+}
+```
+
+가져온 이미지에 대응되는 표시용 세마포어를 가져오는 함수를 추가합니다. 이는 렌더링 커맨드 버퍼가 제출될 때 시그널 됩니다.
+
+```cpp
+auto Swapchain::get_present_semaphore() const -> vk::Semaphore {
+  return *m_present_semaphores.at(m_image_index.value());
+}
+```
+
+스왑체인에서 이미지를 받아오고 표시하는 작업은 다양한 결과를 반환할 수 있습니다. 우리는 다음과 같은 경우로 한정하여 처리하겠습니다.
 
 - `eSuccess` : 문제가 없습니다.
 - `eSuboptimalKHR` : 역시 문제가 없습니다(에러는 아니며, 데스크탑 환경에서는 드물게 발생합니다).
