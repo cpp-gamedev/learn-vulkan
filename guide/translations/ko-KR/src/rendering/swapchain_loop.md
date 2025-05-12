@@ -19,7 +19,10 @@
 
 ## 가상 프레임
 
-프레임마다 사용되는 모든 동적 자원들은 가상 프레임에 포함됩니다. 애플리케이션은 고정된 개수의 가상 프레임을 가지고 있으며, 매 렌더 패스마다 이를 순환하며 사용합니다. 동기화를 위해 각 프레임은 이전 프레임의 렌더링이 끝날 때 까지 대기하게 만드는 [`vk::Fence`](https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-fences)가 있어야 합니다. 또한 GPU에서의 이미지를 받아오고, 렌더링, 화면에 나타내는 작업을 동기화하기 위한 2개의[`vk::Semaphore`](https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-semaphores)가 필요합니다(이 작업들은 CPU측에서 대기할 필요는 없습니다). 명령을 기록하기 위해 가상 프레임마다 [`vk::CommandBuffer`](https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html)를 두어 해당 프레임의 (레이아웃 전환을 포함한) 모든 렌더링 명령을 기록할 것입니다.
+프레임마다 사용되는 모든 동적 자원들은 가상 프레임에 포함됩니다. 애플리케이션은 고정된 개수의 가상 프레임을 가지고 있으며, 매 렌더 패스마다 이를 순환하며 사용합니다. 동기화를 위해 각 프레임은 이전 프레임의 렌더링이 끝날 때 까지 대기하게 만드는 [`vk::Fence`](https://registry.khronos.org/vulkan/specs/latest/man/html/VkFence.html)가 있어야 합니다. 또한 GPU에서의 이미지를 받아오는 것과 렌더링하는 작업을 동기화하기 위한 [`vk::Semaphore`](https://registry.khronos.org/vulkan/specs/latest/man/html/VkSemaphore.html)가 필요합니다(이 작업들은 코드에서 대기할 필요는 없습니다). 명령을 기록하기 위해 가상 프레임마다 [`vk::CommandBuffer`](https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html)를 두어 해당 프레임의 (레이아웃 전환을 포함한) 모든 렌더링 명령을 기록할 것입니다.
+
+
+화면 표시 작업에도 동기화를 위한 세마포어가 필요하지만, 스왑체인 루프는 각 가상 프레임이 처음 사용될 때 미리 시그널되는 drawn 펜스를 기준으로 대기하기 때문에, 표시용 세마포어는 가상 프레임의 일부가 될 수 없습니다. 아직 시그널되지 않은 표시용 세마포어를 사용하여 이미지를 가져오고 커맨드를 제출하는 것도 가능하지만, 이는 유효하지 않은 동작입니다. 따라서 이러한 세마포어는 스왑체인 이미지(인덱스)와 연결되며, 스왑체인이 재생성될 때 함께 재생성됩니다.
 
 ## 이미지 레이아웃
 
