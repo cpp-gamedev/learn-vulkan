@@ -1,6 +1,6 @@
-# (中文 WIP) Application
+# Application
 
-`class App` will serve as the owner and driver of the entire application. While there will only be one instance, using a class enables us to leverage RAII and destroy all its resources automatically and in the correct order, and avoids the need for globals.
+`class App` 會作為整個應用程式的擁有者與執行者。 雖然其實際上只會建立一個實例，但使用 class 可以讓我們善用 RAII，自動且按正確順序釋放所有資源，並避免使用全域變數
 
 ```cpp
 // app.hpp
@@ -21,7 +21,7 @@ void App::run() {
 
 ## Main
 
-`main.cpp` will not do much: it's mainly responsible for transferring control to the actual entry point, and catching fatal exceptions.
+`main.cpp` 不會負責太多事：它主要的工作是將控制權交給真正的進入點，並攔截致命的例外錯誤
 
 ```cpp
 // main.cpp

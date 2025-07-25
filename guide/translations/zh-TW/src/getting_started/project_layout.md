@@ -1,14 +1,14 @@
-# (中文 WIP) Project Layout
+# Project Layout
 
-This page describes the layout used by the code in this guide. Everything here is just an opinionated option used by the guide, and is not related to Vulkan usage.
+本頁說明這份教學中所使用的程式碼結構。 這些安排只是本教學採用的一種主觀選擇，與 Vulkan 的使用方式本身無關
 
-External dependencies are stuffed into a zip file that's decompressed by CMake during the configure stage. Using FetchContent is a viable alternative.
+外部的依賴庫會被打包成一個 zip 檔，並在 CMake 的 configure 階段中被解壓縮。 你也可以考慮將 FetchContent 作為替代方案
 
-`Ninja Multi-Config` is the assumed generator used, regardless of OS/compiler. This is set up in a `CMakePresets.json` file in the project root. Additional custom presets can be added via `CMakeUserPresets.json`.
+預設使用的建構器（generator）是 `Ninja Multi-Config`，不論哪個作業系統或編譯器都是如此。 這會在專案根目錄下的 `CMakePresets.json` 中設定。 你也可以透過 `CMakeUserPresets.json` 加入自定的 preset 設定
 
-> On Windows, Visual Studio CMake Mode uses this generator and automatically loads presets. With Visual Studio Code, the CMake Tools extension automatically uses presets. For other IDEs, refer to their documentation on using CMake presets.
+> 在 Windows 上，Visual Studio 的 CMake 模式會使用這個建構器並自動載入 preset。 若使用 Visual Studio Code，CMake Tools 擴充套件也會自動使用這些 preset。 至於其他 IDE 則請參考它們對於 CMake preset 的使用說明
 
-**Filesystem**
+**檔案系統結構**
 
 ```
 .

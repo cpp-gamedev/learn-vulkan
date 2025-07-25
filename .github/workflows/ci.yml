@@ -4,6 +4,7 @@ on:
     branches-ignore:
       - staging
       - production
+  workflow_dispatch:
 jobs:
   format-check:
     runs-on: ubuntu-latest
@@ -26,11 +27,11 @@ jobs:
       - name: init
         run: uname -m; sudo apt update -yqq && sudo apt install -yqq ninja-build mesa-common-dev libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
       - name: configure
-        run: export CXX=g++-14; cmake -S . --preset=default -B build -DGLFW_BUILD_X11=OFF
+        run: cmake -S . --preset=ninja-gcc -B build -DGLFW_BUILD_X11=OFF -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14
       - name: build debug
-        run: cmake --build build --config=Debug
+        run: cmake --build build --config=Debug -- -v
       - name: build release
-        run: cmake --build build --config=Release
+        run: cmake --build build --config=Release -- -v
       - name: test debug
         run: cd build && ctest -V -C Debug
       - name: test release
@@ -44,9 +45,9 @@ jobs:
       - name: configure
         run: cmake -S . --preset=ninja-clang -B build -DGLFW_BUILD_X11=OFF
       - name: build debug
-        run: cmake --build build --config=Debug
+        run: cmake --build build --config=Debug -- -v
       - name: build release
-        run: cmake --build build --config=Release
+        run: cmake --build build --config=Release -- -v
       - name: test debug
         run: cd build && ctest -V -C Debug
       - name: test release
@@ -58,11 +59,11 @@ jobs:
       - name: init
         run: uname -m; sudo apt update -yqq && sudo apt install -yqq ninja-build mesa-common-dev libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
       - name: configure
-        run: export CXX=g++-14; cmake -S . --preset=default -B build -DGLFW_BUILD_X11=OFF
+        run: cmake -S . --preset=ninja-gcc -B build -DGLFW_BUILD_X11=OFF -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14
       - name: build debug
-        run: cmake --build build --config=Debug
+        run: cmake --build build --config=Debug -- -v
       - name: build release
-        run: cmake --build build --config=Release
+        run: cmake --build build --config=Release -- -v
       - name: test debug
         run: cd build && ctest -V -C Debug
       - name: test release
@@ -76,9 +77,9 @@ jobs:
       - name: configure
         run: cmake -S . --preset=ninja-clang -B build -DGLFW_BUILD_X11=OFF
       - name: build debug
-        run: cmake --build build --config=Debug
+        run: cmake --build build --config=Debug -- -v
       - name: build release
-        run: cmake --build build --config=Release
+        run: cmake --build build --config=Release -- -v
       - name: test debug
         run: cd build && ctest -V -C Debug
       - name: test release
@@ -106,9 +107,9 @@ jobs:
       - name: configure
         run: cmake -S . --preset=ninja-clang -B clang
       - name: build debug
-        run: cmake --build clang --config=Debug
+        run: cmake --build clang --config=Debug -- -v
       - name: build release
-        run: cmake --build clang --config=Release
+        run: cmake --build clang --config=Release -- -v
       - name: test debug
         run: cd clang && ctest -V -C Debug
       - name: test release

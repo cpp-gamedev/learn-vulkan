@@ -1,33 +1,40 @@
-# (中文 WIP) Intro
+# Intro
 
-Vulkan is known for being explicit and verbose. But the _required_ verbosity has steadily reduced with each successive version, its new features, and previous extensions being absorbed into the core API. Similarly, RAII has been a pillar of C++ since its inception, yet most Vulkan guides do not utilize it, instead choosing to "extend" the explicitness by manually cleaning up resources.
+Vulkan 一向以顯式（explicit）與冗長著稱。 不過，這種「必要的冗長」隨著每一個版本的演進，以及新功能與舊有的 extension 被納入核心 API 後，正逐漸地在減少。 同樣地，RAII 自 C++ 發展以來就是其核心概念之一，但多數 Vulkan 教學卻沒有活用它，而是選擇用手動釋放資源的方式來延續這種「顯式性」
 
-To fill that gap, this guide has the following goals:
+為了填補這個缺口，本教學有以下幾個目標：
 
-- Leverage modern C++, VulkanHPP, and Vulkan 1.3 features
-- Focus on keeping it simple and straightforward, _not_ on performance
-- Develop a basic but dynamic rendering foundation
+- 善用現代 C++、VulkanHPP，以及 Vulkan 1.3 的特性
+- 著重在簡潔與易懂，而不是效能
+- 建立一個基礎但具有動態特性的 rendering 架構
 
-To reiterate, the focus is _not on performance_, it is on a quick introduction to the current standard multi-platform graphics API while utilizing the modern paradigms and tools (at the time of writing). Even disregarding potential performance gains, Vulkan has a better and modern design and ecosystem than OpenGL, eg: there is no global state machine, parameters are passed by filling structs with meaningful member variable names, multi-threading is largely trivial (yes, it is actually easier to do on Vulkan than OpenGL), there are a comprehensive set of validation layers to catch misuse which can be enabled without _any_ changes to application code, etc.
+要注意的是，這份教學的重點不是效能，而是快速介紹目前標準的跨平台繪圖 API，並配合當代主流的程式設計模式與工具（以本文撰寫當下為準）。 就算不考慮效能上的潛在優勢，Vulkan 的設計本身也比 OpenGL 更現代化、更完善，例如：沒有全域狀態機、所有參數都透過 struct 傳遞且欄位名稱具語意、多執行緒的支援非常直接（沒錯，在 Vulkan 上其實比 OpenGL 更好做），還有提供一整套的 validation layer，讓你開發的時候可以在不需改動任何程式碼的情況下捕捉到一些誤用（misuse）
 
 ## Target Audience
 
-The guide is for you if you:
+如果你符合以下條件，那這份教學會很適合你：
 
-- Understand the principles of modern C++ and its usage
-- Have created C++ projects using third-party libraries
-- Are somewhat familiar with graphics
-    - Having done OpenGL tutorials would be ideal
-    - Experience with frameworks like SFML / SDL is great
-- Don't mind if all the information you need isn't monolithically in one place (ie, this guide)
+- 了解現代 C++ 的原則與用法
+- 有建立過使用第三方函式庫的 C++ 專案
+- 對繪圖領域有一些基本認識
+  - 如果已做過 OpenGL 的教學會很好
+  - 有使用過像 SFML / SDL 這類 framework 的經驗也很好
+- 不介意教學不會涵蓋所有細節的話
 
-Some examples of what this guide _does not_ focus on:
+這份教學「不會」對以下主題做太多著墨：
 
-- GPU-driven rendering
-- Real-time graphics from ground-up
-- Considerations for tiled GPUs (eg mobile devices / Android)
+- 由 GPU 主導的 rendering 架構
+- 從零開始打造即時繪圖引擎
+- 專為 tile-based GPU 考量的實作（例如行動裝置 / Android）
 
 ## Source
 
-The source code for the project (as well as this guide) is located in [this repository](https://github.com/cpp-gamedev/learn-vulkan). A `section/*` branch intends to reflect the state of the code at the end of a particular section of the guide. Bugfixes / changes are generally backported, but there may be some divergence from the current state of the code (ie, in `main`). The source of the guide itself is only up-to-date on `main`, changes are not backported.
+本專案的原始碼（以及這份教學的內容）都放在[這個 repository](https://github.com/cpp-gamedev/learn-vulkan) 裡。 repo 中的每個 `section/*` 分支（branch）會對應到教學中特定章節結束時的程式狀態。 一般來說修正的 bug 與後續的更新都會回補進這些分支，但仍可能會與主分支（`main`）上的最新程式碼有些出入。 教學本身的文章內容只有在 `main` 分支上是最新的，這些變更並不會被回補進其他分支
 
+## 譯者的話（by Mes）
+
+感謝 karnage 寫的文章，他是一位非常厲害的工程師，非常熟悉現代 C++ 與遊戲引擎相關的技術，問他問題時他也都回的非常有耐心，人很 nice
+
+翻譯時我會盡量還原原文的意思，但有時候會斟酌對譯文做一些增減以更符合其原語意。 如果發現翻譯部分有錯，歡迎直接發 issue 或 PR 過來。 如果閱讀上有什麼問題，也可以直接發 issue 或是到我們的 Discord 中詢問
+
+譯文的排版上基本以[中文文案排版指北](https://github.com/sparanoid/chinese-copywriting-guidelines)為主，但由於本人的習慣，在段落的句尾並不會加上句號，另外在全形標點符號的前後我會視情況加上空格以方便閱讀。 每個段落的行數會盡量控制在 2~4 行，因此視情況會對原文中較長的段落進行分段。 對於一些較難翻的詞意我會於其第一次出現的地方以括號的形式補上原文，而對於標題、TOC 與程式碼中的註解，則會統一直接保留原文

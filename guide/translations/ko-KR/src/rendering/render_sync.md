@@ -17,8 +17,6 @@ using Buffered = std::array<Type, buffering_v>;
 struct RenderSync {
   // signaled when Swapchain image has been acquired.
   vk::UniqueSemaphore draw{};
-  // signaled when image is ready to be presented.
-  vk::UniqueSemaphore present{};
   // signaled with present Semaphore, waited on before next render.
   vk::UniqueFence drawn{};
   // used to record rendering commands.
@@ -68,7 +66,6 @@ void App::create_render_sync() {
      std::views::zip(m_render_sync, command_buffers)) {
     sync.command_buffer = command_buffer;
     sync.draw = m_device->createSemaphoreUnique({});
-    sync.present = m_device->createSemaphoreUnique({});
     sync.drawn = m_device->createFenceUnique(fence_create_info_v);
   }
 }

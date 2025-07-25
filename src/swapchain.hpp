@@ -26,11 +26,13 @@ class Swapchain {
 
 	[[nodiscard]] auto base_barrier() const -> vk::ImageMemoryBarrier2;
 
-	[[nodiscard]] auto present(vk::Queue queue, vk::Semaphore to_wait) -> bool;
+	[[nodiscard]] auto get_present_semaphore() const -> vk::Semaphore;
+	[[nodiscard]] auto present(vk::Queue queue) -> bool;
 
   private:
 	void populate_images();
 	void create_image_views();
+	void create_present_semaphores();
 
 	vk::Device m_device{};
 	Gpu m_gpu{};
@@ -39,6 +41,8 @@ class Swapchain {
 	vk::UniqueSwapchainKHR m_swapchain{};
 	std::vector<vk::Image> m_images{};
 	std::vector<vk::UniqueImageView> m_image_views{};
+	// signaled when image is ready to be presented.
+	std::vector<vk::UniqueSemaphore> m_present_semaphores{};
 	std::optional<std::size_t> m_image_index{};
 };
 } // namespace lvk
