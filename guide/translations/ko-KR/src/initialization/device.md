@@ -2,7 +2,7 @@
 
 [디바이스](https://docs.vulkan.org/spec/latest/chapters/devsandqueues.html#devsandqueues-devices)는 Physical Device의 논리적 인스턴스이며, 이후의 모든 Vulkan 작업에서 주요 인터페이스 역할을 하게 됩니다. [큐](https://docs.vulkan.org/spec/latest/chapters/devsandqueues.html#devsandqueues-queues)는 디바이스가 소유하는 것으로, `Gpu` 구조체에 저장된 큐 패밀리에서 하나를 가져와 기록된 커맨드 버퍼를 제출하는 데 사용할 것입니다. 또한 사용하기를 원하는 [Dynamic Rendering](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_dynamic_rendering.html) 과 [Synchronization2](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_KHR_synchronization2.html)같은 기능들을 명시적으로 선언해야 합니다.
 
-`vk::QueueCreateInfo`객체를 설정합시다.
+`vk::DeviceQueueCreateInfo`객체를 설정합시다.
 
 ```cpp
 auto queue_ci = vk::DeviceQueueCreateInfo{};

@@ -16,7 +16,7 @@ constexpr auto vk_version_v = VK_MAKE_VERSION(1, 3, 0);
 } // namespace
 ```
 
-In `App`, create  a new member function `create_instance()` and call it after `create_window()` in `run()`. After initializing the dispatcher, check that the loader meets the version requirement:
+In `App`, create a new member function `create_instance()` and call it after `create_window()` in `run()`. After initializing the dispatcher, check that the loader meets the version requirement:
 
 ```cpp
 void App::create_instance() {
