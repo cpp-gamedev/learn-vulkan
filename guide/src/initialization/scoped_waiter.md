@@ -2,7 +2,7 @@
 
 A useful abstraction to have is an object that in its destructor waits/blocks until the Device is idle. It is incorrect usage to destroy Vulkan objects while they are in use by the GPU, such an object helps with making sure the device is idle before some dependent resource gets destroyed.
 
-Being able to do arbitary things on scope exit will be useful in other spots too, so we encapsulate that in a basic class template `Scoped`. It's somewhat like a `unique_ptr<Type, Deleter>` that stores the value (`Type`) instead of a pointer (`Type*`), with some constraints:
+Being able to do arbitrary things on scope exit will be useful in other spots too, so we encapsulate that in a basic class template `Scoped`. It's somewhat like a `unique_ptr<Type, Deleter>` that stores the value (`Type`) instead of a pointer (`Type*`), with some constraints:
 
 1. `Type` must be default constructible
 1. Assumes a default constructed `Type` is equivalent to null (does not call `Deleter`)
