@@ -1,6 +1,6 @@
 # Descriptor Buffer
 
-Uniform and Storage buffers need to be N-buffered unless they are "GPU const", ie contents do not change after creation.  Encapsulate a `vma::Buffer` per virtual frame in a `DescriptorBuffer`:
+Uniform and Storage buffers need to be N-buffered unless they are "GPU const", ie contents do not change after creation. Encapsulate a `vma::Buffer` per virtual frame in a `DescriptorBuffer`:
 
 ```cpp
 class DescriptorBuffer {
